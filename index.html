@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>Instagram Carousel Creator</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root{
       --bg:#0f1115;--panel:#171a21;--ink:#e8ecf1;--muted:#98a2b3;--accent:#7c9cff;--line:#222736;--btn:#23293a;--warn:#ef4444;
@@ -12,11 +14,11 @@
     body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,var(--bg),rgba(15,17,21,.6));backdrop-filter: blur(6px);}
     .wrap{max-width:960px;margin:0 auto;padding:12px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .col{flex:1 1 320px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+    .col{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
     label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
     textarea{width:100%;min-height:140px;resize:vertical;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;line-height:1.5}
     select,input[type="number"],input[type="text"]{width:100%;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px}
+    input[type="number"]{appearance:textfield}
     .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .btn{appearance:none;border:1px solid var(--line);background:var(--btn);color:var(--ink);padding:10px 12px;border-radius:12px;font-weight:600}
     .btn.secondary{background:#0a0c12}
@@ -25,10 +27,9 @@
     details{background:#0a0c12;border:1px solid var(--line);border-radius:12px;padding:10px}
     summary{cursor:pointer;color:var(--ink);font-weight:600}
 
-    /* Slides list — vertical */
-    .slides{display:flex;flex-direction:column;gap:14px;overflow-y:auto;max-height:70vh;padding-right:4px}
+    /* Slides — now in normal page flow (no inner scroll) */
+    .slides{display:flex;flex-direction:column;gap:14px;margin-top:12px}
     .slideCard{position:relative;background:#0b0e15;border:1px solid var(--line);border-radius:14px;padding:10px}
-    .slideHead{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px}
     canvas.thumb{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#000;touch-action:none}
 
     footer{display:flex;justify-content:center;padding:24px}
@@ -44,78 +45,87 @@
       <div style="display:flex;align-items:center;gap:10px;flex:1 1 auto">
         <div class="badge">📸 Instagram Carousel Creator <span class="accent">1080×1350</span></div>
       </div>
-      <!-- +Slide removed by request -->
     </div>
   </header>
 
   <main class="wrap">
-    <div class="row">
-      <div class="col" style="flex:1 1 380px">
-        <label for="story">Story (separate slides with an empty line)</label>
-        <textarea id="story" placeholder="Paste your story here.
+    <div class="col">
+      <label for="story">Story (separate slides with an empty line)</label>
+      <textarea id="story" placeholder="Paste your story here.
 
 Each paragraph separated by an empty line becomes a new slide."></textarea>
-        <div class="hint" style="margin-top:8px">Auto-save every ~3s (this session). Slides generate automatically.</div>
+      <div class="hint" style="margin-top:8px">Auto-save every ~3s (this session). Slides generate automatically.</div>
 
-        <details style="margin-top:12px">
-          <summary>Text & overlay settings</summary>
-          <div class="controls" style="margin-top:10px">
-            <div>
-              <label>Font family</label>
-              <select id="fontFamily">
-                <option value="Arial, sans-serif">Arial</option>
-                <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
-                <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                <option value="Georgia, serif">Georgia</option>
-                <option value="'Courier New', Courier, monospace">Courier New</option>
-              </select>
-            </div>
-            <div>
-              <label>Font size (px) — default 45</label>
-              <input id="fontSize" type="number" min="12" max="120" step="1" value="45" />
-            </div>
-            <div>
-              <label>Text alignment</label>
-              <select id="textAlign">
-                <option value="left">Left</option>
-                <option value="center">Center</option>
-                <option value="right">Right</option>
-              </select>
-            </div>
-            <div>
-              <label>Text padding (px)</label>
-              <input id="padding" type="number" min="0" max="120" value="24" />
-            </div>
-            <div>
-              <label>Line height</label>
-              <input id="lineHeight" type="number" min="1" max="2.4" step="0.1" value="1.4" />
-            </div>
-            <div>
-              <label>Text color</label>
-              <input id="textColor" type="text" value="#ffffff" />
-            </div>
-            <div>
-              <label>Overlay darkness (0–1)</label>
-              <input id="overlayAlpha" type="number" min="0" max="1" step="0.05" value="0.35" />
-            </div>
-            <div>
-              <label>Overlay height (%)</label>
-              <input id="overlayHeightPct" type="number" min="15" max="90" value="42" />
-            </div>
-            <div>
-              <label>Bottom offset (px)</label>
-              <input id="bottomOffset" type="number" min="0" max="200" value="0" />
-            </div>
+      <details style="margin-top:12px">
+        <summary>Advanced style options (optional)</summary>
+        <div class="controls" style="margin-top:10px">
+          <div>
+            <label>Font family</label>
+            <select id="fontFamily">
+              <option value="'Montserrat', Arial, sans-serif">Montserrat</option>
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
+              <option value="'Times New Roman', Times, serif">Times New Roman</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="'Courier New', Courier, monospace">Courier New</option>
+            </select>
           </div>
-        </details>
-      </div>
+          <div>
+            <label>Text align</label>
+            <select id="textAlign">
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
 
-      <div class="col" style="flex:1 1 420px">
-        <div class="slideHead"><span>Slides</span>
-          <div class="hint">Long press — download JPG • Use the button below to replace photo • Drag photo to reposition</div>
+          <div style="grid-column:1 / span 2; display:flex; align-items:center; gap:8px; margin-top:4px">
+            <input id="showArrow" type="checkbox">
+            <label for="showArrow" style="margin:0">Show “swipe right” arrow on all but last slide</label>
+          </div>
+
+          <div>
+            <label>Base font size (px)</label>
+            <input id="fontSize" type="number" min="12" max="120" step="1" value="45" />
+          </div>
+          <div>
+            <label>Line height</label>
+            <input id="lineHeight" type="number" min="1" max="2.4" step="0.01" value="1.25" />
+          </div>
+          <div>
+            <label>Text padding (px)</label>
+            <input id="padding" type="number" min="0" max="160" step="1" value="64" />
+          </div>
+          <div>
+            <label>Fade height (% of canvas)</label>
+            <input id="overlayHeightPct" type="number" min="15" max="90" value="60" />
+          </div>
+          <div>
+            <label>Backdrop opacity (0–1)</label>
+            <input id="overlayAlpha" type="number" min="0" max="1" step="0.05" value="1" />
+          </div>
+          <div>
+            <label>Corner radius (px)</label>
+            <input id="cornerRadius" type="number" min="0" max="120" step="1" value="0" />
+          </div>
+          <div>
+            <label>Text color</label>
+            <input id="textColor" type="text" value="#ffffff" />
+          </div>
+          <div>
+            <label>Shadow (0–1)</label>
+            <input id="textShadow" type="number" min="0" max="1" step="0.01" value="0.8" />
+          </div>
+          <div>
+            <label>Bottom offset (px)</label>
+            <input id="bottomOffset" type="number" min="0" max="200" value="0" />
+          </div>
         </div>
-        <div id="slides" class="slides"></div>
-      </div>
+      </details>
+
+      <!-- Slides live here, under options -->
+      <div class="hint" style="margin:12px 0 8px">Long press a slide to download JPG • Drag photo to reposition • Use “Replace photo” below each slide</div>
+      <div id="slides" class="slides"></div>
     </div>
   </main>
 
@@ -129,22 +139,25 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     // --- App State ---
     const W = 1080, H = 1350; // 4:5 portrait
     const state = {
-      slides: [], // { text: string, imgSrc?: dataURL, offset:{x,y} }
+      slides: [], // { text, imgSrc?, offset:{x,y} }
       settings: {
-        fontFamily: 'Arial, sans-serif',
+        fontFamily: "'Montserrat', Arial, sans-serif",
         fontSize: 45,
         textAlign: 'left',
-        padding: 24,
-        lineHeight: 1.4,
+        padding: 64,
+        lineHeight: 1.25,
         textColor: '#ffffff',
-        overlayAlpha: 0.35,
-        overlayHeightPct: 42,
+        overlayAlpha: 1,
+        overlayHeightPct: 60,
         bottomOffset: 0,
+        cornerRadius: 0,
+        textShadow: 0.8,
+        showArrow: false,
       },
       autosaveTS: 0
     };
 
-    // --- DOM ---
+    // DOM
     const elStory = document.getElementById('story');
     const elSlides = document.getElementById('slides');
     const elFile = document.getElementById('filePicker');
@@ -153,19 +166,24 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     const bindSetting = (id, key, transform=(v)=>v, rev=(v)=>v) => {
       const el = document.getElementById(id);
       el.value = rev(state.settings[key]);
-      el.addEventListener('input', () => { state.settings[key] = transform(el.value); renderAll(); queueAutosave(); });
+      const update = () => { state.settings[key] = transform(el.type==='checkbox' ? el.checked : el.value); renderAll(); queueAutosave(); };
+      el.addEventListener('input', update);
+      if(el.type==='checkbox') el.checked = !!state.settings[key];
     };
     bindSetting('fontFamily','fontFamily');
-    bindSetting('fontSize','fontSize', v=>parseInt(v,10));
     bindSetting('textAlign','textAlign');
-    bindSetting('padding','padding', v=>parseInt(v,10));
+    bindSetting('fontSize','fontSize', v=>parseInt(v,10));
     bindSetting('lineHeight','lineHeight', v=>parseFloat(v));
-    bindSetting('textColor','textColor');
-    bindSetting('overlayAlpha','overlayAlpha', v=>parseFloat(v));
+    bindSetting('padding','padding', v=>parseInt(v,10));
     bindSetting('overlayHeightPct','overlayHeightPct', v=>parseInt(v,10));
+    bindSetting('overlayAlpha','overlayAlpha', v=>parseFloat(v));
+    bindSetting('cornerRadius','cornerRadius', v=>parseInt(v,10));
+    bindSetting('textColor','textColor');
+    bindSetting('textShadow','textShadow', v=>parseFloat(v));
     bindSetting('bottomOffset','bottomOffset', v=>parseInt(v,10));
+    bindSetting('showArrow','showArrow', v=>v==='on' ? true : document.getElementById('showArrow').checked);
 
-    // --- Slides from text (auto) ---
+    // text -> slides (auto)
     function splitTextToSlides(t){
       const parts = t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
       const old = state.slides;
@@ -174,14 +192,12 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         imgSrc: (old[i] && old[i].imgSrc) || undefined,
         offset: (old[i] && old[i].offset) || {x:0,y:0}
       }));
-      renderSlidesList();
-      renderAll();
+      renderSlidesList(); renderAll();
     }
     elStory.addEventListener('input', ()=>{ splitTextToSlides(elStory.value); queueAutosave(); });
 
-    // --- Rendering ---
+    // render
     function createSlideCard(index){
-      const s = state.slides[index];
       const wrap = document.createElement('div');
       wrap.className = 'slideCard';
 
@@ -219,13 +235,32 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       });
     }
 
+    // drawing helpers
+    function roundedClip(ctx, x, y, w, h, r){
+      if(!r) return;
+      const rr = Math.min(r, w/2, h/2);
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x+rr,y);
+      ctx.arcTo(x+w,y,x+w,y+h,rr);
+      ctx.arcTo(x+w,y+h,x,y+h,rr);
+      ctx.arcTo(x,y+h,x,y,rr);
+      ctx.arcTo(x,y,x+w,y,rr);
+      ctx.closePath();
+      ctx.clip();
+    }
+    function endClip(ctx, r){ if(r){ ctx.restore(); } }
+
     function renderSlideCanvas(cv, index){
       const s = state.slides[index];
       const ctx = cv.getContext('2d');
+
       ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
 
+      const useClip = state.settings.cornerRadius>0;
+      if(useClip) roundedClip(ctx,0,0,W,H,state.settings.cornerRadius);
+
       const drawTextAtBottom = ()=>{
-        ctx.save();
         const fs = state.settings.fontSize;
         const lh = Math.max(1, state.settings.lineHeight) * fs;
         ctx.font = `${fs}px ${state.settings.fontFamily}`;
@@ -233,7 +268,6 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         const pad = state.settings.padding;
         const maxW = W - pad*2;
 
-        // wrap lines
         const words = (s.text||'').split(/\s+/);
         const lines = []; let line = '';
         for(const w of words){
@@ -243,7 +277,6 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         }
         if(line) lines.push(line);
 
-        // overlay at bottom
         const overlayH = Math.round(H * (state.settings.overlayHeightPct/100));
         const baseY = H - overlayH - state.settings.bottomOffset;
 
@@ -254,18 +287,30 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         const x = align==='left' ? pad : (align==='center' ? W/2 : W - pad);
         let y = baseY + pad + fs;
         ctx.fillStyle = state.settings.textColor;
-        for(const ln of lines){
-          ctx.fillText(ln, x, y);
-          y += lh;
-          if(y > baseY + overlayH - pad) break;
+
+        if(state.settings.textShadow>0){
+          ctx.save();
+          ctx.shadowColor = `rgba(0,0,0,${state.settings.textShadow})`;
+          ctx.shadowBlur = 12;
+          ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+          for(const ln of lines){
+            ctx.fillText(ln, x, y);
+            y += lh;
+            if(y > baseY + overlayH - pad) break;
+          }
+          ctx.restore();
+        } else {
+          for(const ln of lines){
+            ctx.fillText(ln, x, y);
+            y += lh;
+            if(y > baseY + overlayH - pad) break;
+          }
         }
-        ctx.restore();
       };
 
       if(s.imgSrc){
         const img = new Image();
         img.onload = ()=>{
-          // contain/cover hybrid with user offset to let user reposition image
           const rImg = img.width / img.height, rCan = W / H;
           let dw=W, dh=H;
           if(rImg > rCan){ dh = W / rImg; dw = W; } else { dw = H * rImg; dh = H; }
@@ -273,25 +318,42 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
           const cy = (H - dh)/2 + (s.offset?.y||0);
           ctx.drawImage(img, cx, cy, dw, dh);
           drawTextAtBottom();
+          if(state.settings.showArrow && index < state.slides.length-1){ drawSwipeArrow(ctx); }
+          if(useClip) endClip(ctx, true);
         };
         img.src = s.imgSrc;
       } else {
-        // gradient placeholder + text
         const g = ctx.createLinearGradient(0,0,0,H);
         g.addColorStop(0,'#1a2030'); g.addColorStop(1,'#0c1020');
         ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
         drawTextAtBottom();
+        if(state.settings.showArrow && index < state.slides.length-1){ drawSwipeArrow(ctx); }
+        if(useClip) endClip(ctx, true);
+      }
+
+      function drawSwipeArrow(ctx){
+        ctx.save();
+        ctx.globalAlpha = 0.75;
+        ctx.fillStyle = '#ffffff';
+        const size = 36;
+        const cx = W - 24, cy = H/2;
+        ctx.beginPath();
+        ctx.moveTo(cx - size/2, cy - size/2);
+        ctx.lineTo(cx + size/2, cy);
+        ctx.lineTo(cx - size/2, cy + size/2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
       }
     }
 
-    // --- Interactions ---
+    // interactions
     function attachCanvasHandlers(cv, index){
       let timer=null, isDragging=false, last={x:0,y:0};
 
       const start = (e)=>{
         e.preventDefault();
         isDragging=false; last=getPoint(e, cv);
-        // long press = download
         timer = setTimeout(()=>{ if(!isDragging){ downloadSlide(index); } }, 650);
       };
       const move = (e)=>{
@@ -342,8 +404,8 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       document.body.appendChild(a); a.click(); a.remove();
     }
 
-    // --- Autosave in sessionStorage ---
-    const SAVE_KEY = 'icc_session_v3';
+    // autosave
+    const SAVE_KEY = 'icc_session_v5';
     function queueAutosave(){ state.autosaveTS = Date.now(); }
     setInterval(()=>{
       if(!state.autosaveTS) return;
@@ -360,35 +422,48 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       try{
         const raw = sessionStorage.getItem(SAVE_KEY); if(!raw) return; const data = JSON.parse(raw);
         Object.assign(state.settings, data.settings||{});
-        ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','overlayAlpha','overlayHeightPct','bottomOffset']
-          .forEach(id=>{ if(document.getElementById(id)) document.getElementById(id).value = state.settings[id]; });
+        ['fontFamily','textAlign','fontSize','lineHeight','padding','overlayHeightPct','overlayAlpha','cornerRadius','textColor','textShadow','bottomOffset','showArrow']
+          .forEach(id=>{
+            const el = document.getElementById(id);
+            if(!el) return;
+            if(el.type==='checkbox'){ el.checked = !!state.settings[id]; }
+            else { el.value = state.settings[id]; }
+          });
         state.slides = (data.slides||[]).map(s=>({text:s.text||'', imgSrc:s.imgSrc, offset:s.offset||{x:0,y:0}}));
         elStory.value = data.story || '';
       }catch(e){}
     }
 
-    // --- Clear (reset to defaults) ---
+    // clear
     document.getElementById('clearBtn').addEventListener('click', ()=>{
       if(!confirm('Reset everything to defaults?')) return;
       state.slides = []; elStory.value = '';
       Object.assign(state.settings, {
-        fontFamily: 'Arial, sans-serif',
+        fontFamily: "'Montserrat', Arial, sans-serif",
         fontSize: 45,
         textAlign: 'left',
-        padding: 24,
-        lineHeight: 1.4,
+        padding: 64,
+        lineHeight: 1.25,
         textColor: '#ffffff',
-        overlayAlpha: 0.35,
-        overlayHeightPct: 42,
+        overlayAlpha: 1,
+        overlayHeightPct: 60,
         bottomOffset: 0,
+        cornerRadius: 0,
+        textShadow: 0.8,
+        showArrow: false,
       });
-      ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','overlayAlpha','overlayHeightPct','bottomOffset']
-        .forEach(id=>{ if(document.getElementById(id)) document.getElementById(id).value = state.settings[id]; });
+      ['fontFamily','textAlign','fontSize','lineHeight','padding','overlayHeightPct','overlayAlpha','cornerRadius','textColor','textShadow','bottomOffset','showArrow']
+        .forEach(id=>{
+          const el = document.getElementById(id);
+          if(!el) return;
+          if(el.type==='checkbox'){ el.checked = !!state.settings[id]; }
+          else { el.value = state.settings[id]; }
+        });
       sessionStorage.removeItem(SAVE_KEY);
       renderSlidesList(); renderAll();
     });
 
-    // --- Init ---
+    // init
     restore();
     renderSlidesList(); renderAll();
     if(elStory.value) splitTextToSlides(elStory.value);
