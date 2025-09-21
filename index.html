@@ -15,7 +15,7 @@
     .col{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
     label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
     textarea{width:100%;min-height:140px;resize:vertical;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;line-height:1.5}
-    select,input[type="number"],input[type="text"]{width:100%;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px}
+    select,input[type="number"],input[type="text"],input[type="color"]{width:100%;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px}
     input[type="number"]{appearance:textfield}
     .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .btn{appearance:none;border:1px solid var(--line);background:var(--btn);color:var(--ink);padding:10px 12px;border-radius:12px;font-weight:600}
@@ -87,6 +87,11 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
           <div><label>Text color</label><input id="textColor" type="text" value="#ffffff" /></div>
           <div><label>Shadow (0–1)</label><input id="textShadow" type="number" min="0" max="1" step="0.01" value="0.8" /></div>
           <div><label>Bottom offset (px)</label><input id="bottomOffset" type="number" min="0" max="200" value="0" /></div>
+
+          <div style="grid-column:1 / span 2">
+            <label>Background color (under photos)</label>
+            <input id="bgColor" type="color" value="#000000" />
+          </div>
         </div>
       </details>
 
@@ -102,7 +107,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
   <input id="filePicker" type="file" accept="image/*" style="display:none" />
 
   <script>
-    const W = 1080, H = 1350; // 4:5
+    const W = 1080, H = 1350; // 4:5 portrait
     const state = {
       slides: [],
       settings: {
@@ -112,12 +117,13 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         padding: 64,
         lineHeight: 1.25,
         textColor: '#ffffff',
-        overlayAlpha: 0.6,     // softer
-        overlayHeightPct: 20,  // 3x smaller than 60%
+        overlayAlpha: 0.6,     // gradient bottom opacity
+        overlayHeightPct: 20,  // gradient height (as % of canvas)
         bottomOffset: 0,
         cornerRadius: 0,
         textShadow: 0.8,
         showArrow: false,
+        bgColor: '#000000',    // NEW: background color under photo
       },
       autosaveTS: 0
     };
@@ -126,12 +132,17 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     const elSlides = document.getElementById('slides');
     const elFile = document.getElementById('filePicker');
 
+    // bind settings
     const bindSetting = (id, key, transform=(v)=>v, rev=(v)=>v) => {
       const el = document.getElementById(id);
-      el.value = rev(state.settings[key]);
-      const update = () => { state.settings[key] = transform(el.type==='checkbox' ? el.checked : el.value); renderAll(); queueAutosave(); };
+      if(!el) return;
+      if(el.type==='checkbox'){ el.checked = !!state.settings[key]; }
+      else { el.value = rev(state.settings[key]); }
+      const update = () => {
+        state.settings[key] = transform(el.type==='checkbox' ? el.checked : el.value);
+        renderAll(); queueAutosave();
+      };
       el.addEventListener('input', update);
-      if(el.type==='checkbox') el.checked = !!state.settings[key];
     };
     bindSetting('fontFamily','fontFamily');
     bindSetting('textAlign','textAlign');
@@ -145,7 +156,9 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     bindSetting('textShadow','textShadow', v=>parseFloat(v));
     bindSetting('bottomOffset','bottomOffset', v=>parseInt(v,10));
     bindSetting('showArrow','showArrow', v=>v==='on' ? true : document.getElementById('showArrow').checked);
+    bindSetting('bgColor','bgColor');
 
+    // split text → slides
     function splitTextToSlides(t){
       const parts = t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
       const old = state.slides;
@@ -158,6 +171,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     }
     elStory.addEventListener('input', ()=>{ splitTextToSlides(elStory.value); queueAutosave(); });
 
+    // UI build
     function createSlideCard(index){
       const wrap = document.createElement('div'); wrap.className = 'slideCard';
       const c = document.createElement('canvas'); c.width = W; c.height = H; c.className='thumb'; c.dataset.index = index;
@@ -166,7 +180,6 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       replaceBtn.addEventListener('click',(e)=>{ e.stopPropagation(); replacePhoto(index); }); wrap.appendChild(replaceBtn);
       renderSlideCanvas(c, index); return wrap;
     }
-
     function renderSlidesList(){
       elSlides.innerHTML = '';
       state.slides.forEach((_,i)=>elSlides.appendChild(createSlideCard(i)));
@@ -175,21 +188,11 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         empty.textContent = 'No slides yet. Type your story — slides appear automatically.'; elSlides.appendChild(empty);
       }
     }
+    function renderAll(){ document.querySelectorAll('canvas.thumb').forEach(cv=>renderSlideCanvas(cv, parseInt(cv.dataset.index,10))); }
 
-    function renderAll(){
-      document.querySelectorAll('canvas.thumb').forEach(cv=>renderSlideCanvas(cv, parseInt(cv.dataset.index,10)));
-    }
-
-    // gradient backdrop from bottom -> transparent upward
-    function drawGradientBackdrop(ctx, x, y, w, h, alphaBottom){
-      const g = ctx.createLinearGradient(0, y+h, 0, y);
-      g.addColorStop(0, `rgba(0,0,0,${alphaBottom})`); // bottom
-      g.addColorStop(1, `rgba(0,0,0,0)`);               // top
-      ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
-    }
-
+    // helpers
     function roundedClip(ctx, x, y, w, h, r){
-      if(!r) return;
+      if(!r) return false;
       const rr = Math.min(r, w/2, h/2);
       ctx.save(); ctx.beginPath();
       ctx.moveTo(x+rr,y);
@@ -198,19 +201,62 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       ctx.arcTo(x,y+h,x,y,rr);
       ctx.arcTo(x,y,x+w,y,rr);
       ctx.closePath(); ctx.clip();
+      return true;
     }
-    function endClip(ctx, r){ if(r){ ctx.restore(); } }
+    function endClip(ctx, clipped){ if(clipped){ ctx.restore(); } }
+
+    // gradient from bottom (opaque*alpha) to transparent upwards
+    function drawGradientBackdrop(ctx, x, y, w, h, alphaBottom){
+      const g = ctx.createLinearGradient(0, y+h, 0, y);
+      g.addColorStop(0, `rgba(0,0,0,${alphaBottom})`);
+      g.addColorStop(1, `rgba(0,0,0,0)`);
+      ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+    }
 
     function renderSlideCanvas(cv, index){
       const s = state.slides[index];
       const ctx = cv.getContext('2d');
 
-      ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
+      // background under photo (customizable)
+      ctx.fillStyle = state.settings.bgColor || '#000';
+      ctx.fillRect(0,0,W,H);
 
-      const useClip = state.settings.cornerRadius>0;
-      if(useClip) roundedClip(ctx,0,0,W,H,state.settings.cornerRadius);
+      const clipped = roundedClip(ctx,0,0,W,H,state.settings.cornerRadius);
 
-      const drawTextAtBottom = ()=>{
+      // compute overlay rect once (used after image, before text)
+      const overlayH = Math.round(H * (state.settings.overlayHeightPct/100));
+      const baseY = H - overlayH - state.settings.bottomOffset;
+
+      // draw image (cover fit) with optional offset for drag
+      if(s.imgSrc){
+        const img = new Image();
+        img.onload = ()=>{
+          const rImg = img.width / img.height, rCan = W / H;
+          let dw=W, dh=H;
+          if(rImg > rCan){ dh = W / rImg; dw = W; } else { dw = H * rImg; dh = H; }
+          const cx = (W - dw)/2 + (s.offset?.x||0);
+          const cy = (H - dh)/2 + (s.offset?.y||0);
+          ctx.drawImage(img, cx, cy, dw, dh);
+
+          // 1) gradient shadow ON TOP of photo
+          drawGradientBackdrop(ctx, 0, baseY, W, overlayH, state.settings.overlayAlpha);
+
+          // 2) text on top of gradient
+          drawText(ctx, s.text, baseY, overlayH);
+
+          if(state.settings.showArrow && index < state.slides.length-1){ drawSwipeArrow(ctx); }
+          endClip(ctx, clipped);
+        };
+        img.src = s.imgSrc;
+      } else {
+        // no photo: still show gradient + text over background color
+        drawGradientBackdrop(ctx, 0, baseY, W, overlayH, state.settings.overlayAlpha);
+        drawText(ctx, s.text, baseY, overlayH);
+        if(state.settings.showArrow && index < state.slides.length-1){ drawSwipeArrow(ctx); }
+        endClip(ctx, clipped);
+      }
+
+      function drawText(ctx, text, baseY, overlayH){
         const fs = state.settings.fontSize;
         const lh = Math.max(1, state.settings.lineHeight) * fs;
         ctx.font = `${fs}px ${state.settings.fontFamily}`;
@@ -218,7 +264,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         const pad = state.settings.padding;
         const maxW = W - pad*2;
 
-        const words = (s.text||'').split(/\s+/);
+        const words = (text||'').split(/\s+/);
         const lines = []; let line = '';
         for(const w of words){
           const test = line ? line + ' ' + w : w;
@@ -227,15 +273,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         }
         if(line) lines.push(line);
 
-        const overlayH = Math.round(H * (state.settings.overlayHeightPct/100));
-        const baseY = H - overlayH - state.settings.bottomOffset;
-
-        // new gradient "shadow" backdrop
-        drawGradientBackdrop(ctx, 0, baseY, W, overlayH, state.settings.overlayAlpha);
-
-        // text
-        const align = state.settings.textAlign;
-        const x = align==='left' ? pad : (align==='center' ? W/2 : W - pad);
+        const x = (state.settings.textAlign==='left') ? pad : (state.settings.textAlign==='center' ? W/2 : W - pad);
         let y = baseY + pad + fs;
         ctx.fillStyle = state.settings.textColor;
 
@@ -248,29 +286,6 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         } else {
           for(const ln of lines){ ctx.fillText(ln, x, y); y += lh; if(y > baseY + overlayH - pad) break; }
         }
-      };
-
-      if(s.imgSrc){
-        const img = new Image();
-        img.onload = ()=>{
-          const rImg = img.width / img.height, rCan = W / H;
-          let dw=W, dh=H;
-          if(rImg > rCan){ dh = W / rImg; dw = W; } else { dw = H * rImg; dh = H; }
-          const cx = (W - dw)/2 + (s.offset?.x||0);
-          const cy = (H - dh)/2 + (s.offset?.y||0);
-          ctx.drawImage(img, cx, cy, dw, dh);
-          drawTextAtBottom();
-          if(state.settings.showArrow && index < state.slides.length-1){ drawSwipeArrow(ctx); }
-          if(useClip) endClip(ctx, true);
-        };
-        img.src = s.imgSrc;
-      } else {
-        const g = ctx.createLinearGradient(0,0,0,H);
-        g.addColorStop(0,'#1a2030'); g.addColorStop(1,'#0c1020');
-        ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-        drawTextAtBottom();
-        if(state.settings.showArrow && index < state.slides.length-1){ drawSwipeArrow(ctx); }
-        if(useClip) endClip(ctx, true);
       }
 
       function drawSwipeArrow(ctx){
@@ -282,6 +297,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       }
     }
 
+    // interactions (drag image, long-press download)
     function attachCanvasHandlers(cv, index){
       let timer=null, isDragging=false, last={x:0,y:0};
       const start=(e)=>{ e.preventDefault(); isDragging=false; last=getPoint(e,cv); timer=setTimeout(()=>{ if(!isDragging){ downloadSlide(index); }},650); };
@@ -307,7 +323,8 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     function downloadSlide(index){ const off=document.createElement('canvas'); off.width=W; off.height=H; renderSlideCanvas(off,index);
       const a=document.createElement('a'); a.href=off.toDataURL('image/jpeg',0.92); a.download=`slide-${index+1}.jpg`; document.body.appendChild(a); a.click(); a.remove(); }
 
-    const SAVE_KEY='icc_session_v6';
+    // autosave
+    const SAVE_KEY='icc_session_v7';
     function queueAutosave(){ state.autosaveTS=Date.now(); }
     setInterval(()=>{ if(!state.autosaveTS) return;
       if(Date.now()-state.autosaveTS>=2900){ try{ const payload={slides:state.slides,settings:state.settings,story:elStory.value};
@@ -317,7 +334,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       try{
         const raw=sessionStorage.getItem(SAVE_KEY); if(!raw) return; const data=JSON.parse(raw);
         Object.assign(state.settings, data.settings||{});
-        ['fontFamily','textAlign','fontSize','lineHeight','padding','overlayHeightPct','overlayAlpha','cornerRadius','textColor','textShadow','bottomOffset','showArrow']
+        ['fontFamily','textAlign','fontSize','lineHeight','padding','overlayHeightPct','overlayAlpha','cornerRadius','textColor','textShadow','bottomOffset','showArrow','bgColor']
           .forEach(id=>{ const el=document.getElementById(id); if(!el) return; if(el.type==='checkbox'){ el.checked=!!state.settings[id]; } else { el.value=state.settings[id]; } });
         state.slides=(data.slides||[]).map(s=>({text:s.text||'', imgSrc:s.imgSrc, offset:s.offset||{x:0,y:0}}));
         elStory.value=data.story||'';
@@ -330,13 +347,14 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       Object.assign(state.settings, {
         fontFamily: "'Montserrat', Arial, sans-serif",
         fontSize: 45, textAlign:'left', padding:64, lineHeight:1.25, textColor:'#ffffff',
-        overlayAlpha:0.6, overlayHeightPct:20, bottomOffset:0, cornerRadius:0, textShadow:0.8, showArrow:false,
+        overlayAlpha:0.6, overlayHeightPct:20, bottomOffset:0, cornerRadius:0, textShadow:0.8, showArrow:false, bgColor:'#000000'
       });
-      ['fontFamily','textAlign','fontSize','lineHeight','padding','overlayHeightPct','overlayAlpha','cornerRadius','textColor','textShadow','bottomOffset','showArrow']
+      ['fontFamily','textAlign','fontSize','lineHeight','padding','overlayHeightPct','overlayAlpha','cornerRadius','textColor','textShadow','bottomOffset','showArrow','bgColor']
         .forEach(id=>{ const el=document.getElementById(id); if(!el) return; if(el.type==='checkbox'){ el.checked=!!state.settings[id]; } else { el.value=state.settings[id]; } });
       sessionStorage.removeItem(SAVE_KEY); renderSlidesList(); renderAll();
     });
 
+    // init
     restore(); renderSlidesList(); renderAll(); if(elStory.value) splitTextToSlides(elStory.value);
   </script>
 </body>
