@@ -4,9 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>Instagram Carousel Creator</title>
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;700&family=Roboto:wght@400;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root{ --bg:#0f1115;--panel:#171a21;--ink:#e8ecf1;--muted:#98a2b3;--accent:#7c9cff;--line:#222736;--btn:#23293a;--warn:#ef4444; }
     *{box-sizing:border-box}
@@ -27,10 +26,7 @@
     summary{cursor:pointer;color:var(--ink);font-weight:600}
     .slides{display:flex;flex-direction:column;gap:14px;margin-top:12px}
     .slideCard{position:relative;background:#0b0e15;border:1px solid var(--line);border-radius:14px;padding:10px}
-    canvas.thumb{
-      width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#000;
-      touch-action: pan-y; /* свободный вертикальный скролл по фото */
-    }
+    canvas.thumb{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#000;touch-action: pan-y;}
     .cardActions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
     .iconBtn{display:inline-flex;align-items:center;gap:8px}
     .iconBtn svg{width:18px;height:18px}
@@ -54,7 +50,7 @@
       <label for="story">Story (separate slides with an empty line)</label>
       <textarea id="story" placeholder="Paste your story here.
 
-Each paragraph separated by an empty line becomes a new slide."></textarea>
+Each paragraph separated by an empty line becomes a new slide. Use **double asterisks** or __underscores__ for bold."></textarea>
       <div class="hint" style="margin-top:8px">Auto-save every ~3s (this session). Slides generate automatically.</div>
 
       <details style="margin-top:12px">
@@ -64,7 +60,10 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
             <label>Font family</label>
             <select id="fontFamily">
               <option value="'Montserrat', Arial, sans-serif">Montserrat</option>
-              <option value="'Poppins','Helvetica Neue', Arial, sans-serif">Instagram Classic (approx.)</option>
+              <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
+              <option value="'Open Sans', Arial, sans-serif">Open Sans Regular</option>
+              <option value="Roboto, Arial, sans-serif">Roboto Regular</option>
+              <option value="'PT Sans', Arial, sans-serif">PT Sans</option>
               <option value="Arial, sans-serif">Arial</option>
               <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
               <option value="'Times New Roman', Times, serif">Times New Roman</option>
@@ -81,24 +80,19 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
             </select>
           </div>
 
-          <div style="grid-column:1 / span 2; display:flex; align-items:center; gap:8px; margin-top:4px">
-            <input id="showArrow" type="checkbox">
-            <label for="showArrow" style="margin:0">Show “swipe right” arrow on all but last slide</label>
-          </div>
+          <div><label>Base font size (px)</label><input id="fontSize" type="number" value="40" /></div>
+          <div><label>Line height</label><input id="lineHeight" type="number" step="0.01" value="1.25" /></div>
+          <div><label>Text padding (px)</label><input id="padding" type="number" value="64" /></div>
 
-          <div><label>Base font size (px)</label><input id="fontSize" type="number" min="12" max="120" step="1" value="45" /></div>
-          <div><label>Line height</label><input id="lineHeight" type="number" min="1" max="2.4" step="0.01" value="1.25" /></div>
-          <div><label>Text padding (px)</label><input id="padding" type="number" min="0" max="160" step="1" value="64" /></div>
+          <div><label>Fade height (% of canvas)</label><input id="overlayHeightPct" type="number" value="20" /></div>
+          <div><label>Darkest opacity (0–1)</label><input id="overlayAlpha" type="number" step="0.05" value="0.8" /></div>
+          <div><label>Gradient curve (0.5–3)</label><input id="overlayHardness" type="number" step="0.05" value="1" /></div>
 
-          <div><label>Fade height (% of canvas)</label><input id="overlayHeightPct" type="number" min="5" max="90" value="20" /></div>
-          <div><label>Darkest opacity (0–1)</label><input id="overlayAlpha" type="number" min="0" max="1" step="0.05" value="0.6" /></div>
-          <div><label>Gradient curve (0.5–3)</label><input id="overlayHardness" type="number" min="0.5" max="3" step="0.05" value="1" /></div>
-
-          <div><label>Corner radius (px)</label><input id="cornerRadius" type="number" min="0" max="120" step="1" value="0" /></div>
+          <div><label>Corner radius (px)</label><input id="cornerRadius" type="number" value="0" /></div>
           <div><label>Text color</label><input id="textColor" type="text" value="#ffffff" /></div>
-          <div><label>Shadow (0–1)</label><input id="textShadow" type="number" min="0" max="1" step="0.01" value="0.8" /></div>
+          <div><label>Shadow (0–1)</label><input id="textShadow" type="number" step="0.01" value="0.8" /></div>
 
-          <div><label>Text bottom offset (px)</label><input id="textBottomOffset" type="number" min="0" max="300" step="1" value="48" /></div>
+          <div><label>Text bottom offset (px)</label><input id="textBottomOffset" type="number" value="150" /></div>
           <div><label>Background color (under photos)</label><input id="bgColor" type="color" value="#000000" /></div>
         </div>
       </details>
@@ -115,274 +109,144 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
   <input id="filePicker" type="file" accept="image/*" style="display:none" />
 
   <script>
-    const W = 1080, H = 1350; // 4:5
+    const W = 1080, H = 1350;
     const state = {
       slides: [],
       settings: {
         fontFamily: "'Montserrat', Arial, sans-serif",
-        fontSize: 45,
+        fontSize: 40,
         textAlign: 'left',
         padding: 64,
         lineHeight: 1.25,
         textColor: '#ffffff',
-        overlayAlpha: 0.6,        // darkest bottom opacity
-        overlayHeightPct: 20,     // gradient height
-        overlayHardness: 1,       // curve: >1 = плотнее внизу
+        overlayAlpha: 0.8,
+        overlayHeightPct: 20,
+        overlayHardness: 1,
         cornerRadius: 0,
         textShadow: 0.8,
-        showArrow: false,
         bgColor: '#000000',
-        textBottomOffset: 48
-      },
-      autosaveTS: 0
+        textBottomOffset: 150
+      }
     };
 
     const elStory = document.getElementById('story');
     const elSlides = document.getElementById('slides');
     const elFile = document.getElementById('filePicker');
 
-    // bind settings
-    const bindSetting = (id, key, transform=(v)=>v, rev=(v)=>v) => {
-      const el = document.getElementById(id);
-      if(!el) return;
-      if(el.type==='checkbox'){ el.checked = !!state.settings[key]; }
-      else { el.value = rev(state.settings[key]); }
-      const update = () => { state.settings[key] = transform(el.type==='checkbox' ? el.checked : el.value); renderAll(); queueAutosave(); };
-      el.addEventListener('input', update);
-    };
-    ['fontFamily','textAlign','textColor','bgColor'].forEach(id=>bindSetting(id,id));
-    bindSetting('fontSize','fontSize', v=>parseInt(v,10));
-    bindSetting('lineHeight','lineHeight', v=>parseFloat(v));
-    bindSetting('padding','padding', v=>parseInt(v,10));
-    bindSetting('overlayHeightPct','overlayHeightPct', v=>parseInt(v,10));
-    bindSetting('overlayAlpha','overlayAlpha', v=>parseFloat(v));
-    bindSetting('overlayHardness','overlayHardness', v=>parseFloat(v));
-    bindSetting('cornerRadius','cornerRadius', v=>parseInt(v,10));
-    bindSetting('textShadow','textShadow', v=>parseFloat(v));
-    bindSetting('textBottomOffset','textBottomOffset', v=>parseInt(v,10));
-    bindSetting('showArrow','showArrow', v=>v==='on' ? true : document.getElementById('showArrow').checked);
+    // Bold parsing (**...** or __...__)
+    function parseBold(text){
+      const tokens = [];
+      const regex = /(\*\*|__)(.*?)\1/g;
+      let lastIndex = 0, match;
+      while((match = regex.exec(text)) !== null){
+        if(match.index > lastIndex){
+          tokens.push({text: text.slice(lastIndex, match.index), bold:false});
+        }
+        tokens.push({text: match[2], bold:true});
+        lastIndex = regex.lastIndex;
+      }
+      if(lastIndex < text.length){
+        tokens.push({text: text.slice(lastIndex), bold:false});
+      }
+      return tokens;
+    }
 
-    // text -> slides
     function splitTextToSlides(t){
       const parts = t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
       const old = state.slides;
       state.slides = parts.map((p,i)=>({ text: p, imgSrc: (old[i] && old[i].imgSrc) || undefined, _img: null }));
       renderSlidesList(); renderAll();
     }
-    elStory.addEventListener('input', ()=>{ splitTextToSlides(elStory.value); queueAutosave(); });
+    elStory.addEventListener('input', ()=>{ splitTextToSlides(elStory.value); });
 
-    // UI
     function createSlideCard(index){
       const wrap = document.createElement('div'); wrap.className = 'slideCard';
-
       const c = document.createElement('canvas'); c.width = W; c.height = H; c.className='thumb'; c.dataset.index = index;
       wrap.appendChild(c);
-
       const actions = document.createElement('div'); actions.className='cardActions';
       const replaceBtn = document.createElement('button'); replaceBtn.className='btn secondary'; replaceBtn.textContent='Replace photo';
-      replaceBtn.addEventListener('click',(e)=>{ e.stopPropagation(); replacePhoto(index); });
+      replaceBtn.addEventListener('click',()=>replacePhoto(index));
       actions.appendChild(replaceBtn);
-
-      const dlBtn = document.createElement('button'); dlBtn.className='btn secondary iconBtn'; dlBtn.title='Download JPG';
-      dlBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3a1 1 0 011 1v9.586l2.293-2.293a1 1 0 111.414 1.414l-4.001 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L11 13.586V4a1 1 0 011-1z"/><path d="M5 20a2 2 0 002 2h10a2 2 0 002-2v-3a1 1 0 10-2 0v3H7v-3a1 1 0 10-2 0v3z"/></svg>`;
-      dlBtn.addEventListener('click', async ()=>{ await downloadSlide(index); });
+      const dlBtn = document.createElement('button'); dlBtn.className='btn secondary iconBtn'; dlBtn.innerHTML='⬇'; dlBtn.addEventListener('click',()=>downloadSlide(index));
       actions.appendChild(dlBtn);
-
       wrap.appendChild(actions);
-
-      renderSlideCanvas(c, index);
+      renderSlideCanvas(c,index);
       return wrap;
     }
 
     function renderSlidesList(){
       elSlides.innerHTML = '';
       state.slides.forEach((_,i)=>elSlides.appendChild(createSlideCard(i)));
-      if(state.slides.length===0){
-        const empty = document.createElement('div'); empty.className='hint';
-        empty.textContent = 'No slides yet. Type your story — slides appear automatically.'; elSlides.appendChild(empty);
-      }
-    }
-    function renderAll(){ document.querySelectorAll('canvas.thumb').forEach(cv=>renderSlideCanvas(cv, parseInt(cv.dataset.index,10))); }
-
-    // helpers
-    function roundedClip(ctx, x, y, w, h, r){
-      if(!r) return false;
-      const rr = Math.min(r, w/2, h/2);
-      ctx.save(); ctx.beginPath();
-      ctx.moveTo(x+rr,y);
-      ctx.arcTo(x+w,y,x+w,y+h,rr);
-      ctx.arcTo(x+w,y+h,x,y+h,rr);
-      ctx.arcTo(x,y+h,x,y,rr);
-      ctx.arcTo(x,y,x+w,y,rr);
-      ctx.closePath(); ctx.clip();
-      return true;
-    }
-    function endClip(ctx, clipped){ if(clipped){ ctx.restore(); } }
-
-    // smooth bottom→top gradient; hardness controls curve steepness
-    function drawGradientBackdrop(ctx, x, y, w, h, alphaBottom, hardness){
-      const steps = 24;
-      const grd = ctx.createLinearGradient(0, y+h, 0, y);
-      for(let i=0;i<=steps;i++){
-        const t = i/steps;                 // 0..1 from bottom to top
-        const a = alphaBottom * Math.pow(1 - t, hardness); // denser at bottom
-        grd.addColorStop(1 - t, `rgba(0,0,0,${a})`);
-      }
-      ctx.fillStyle = grd; ctx.fillRect(x, y, w, h);
     }
 
-    function wrapLines(ctx, text, maxW){
-      const words = (text||'').split(/\s+/);
-      const lines = []; let line = '';
-      for(const w of words){
-        const test = line ? line + ' ' + w : w;
-        if(ctx.measureText(test).width > maxW && line){ lines.push(line); line = w; }
-        else { line = test; }
-      }
-      if(line) lines.push(line);
+    function wrapLines(ctx, tokens, maxW){
+      const lines=[]; let lineTokens=[]; let width=0;
+      tokens.forEach(tok=>{
+        const words = tok.text.split(/(\s+)/);
+        words.forEach(w=>{
+          const metrics = ctx.measureText(w);
+          if(width+metrics.width>maxW && lineTokens.length){
+            lines.push(lineTokens); lineTokens=[tok.bold?{text:w,bold:true}:{text:w,bold:false}]; width=metrics.width;
+          } else {
+            lineTokens.push(tok.bold?{text:w,bold:true}:{text:w,bold:false}); width+=metrics.width;
+          }
+        });
+      });
+      if(lineTokens.length) lines.push(lineTokens);
       return lines;
     }
 
-    function drawFrame(ctx, slide, index){
-      // background
-      ctx.fillStyle = state.settings.bgColor || '#000';
-      ctx.fillRect(0,0,W,H);
-
-      const clipped = roundedClip(ctx,0,0,W,H,state.settings.cornerRadius);
-
-      // image (cover fit, centered)
-      if(slide.imgSrc && slide._img && slide._img.complete){
-        const img = slide._img;
-        const rImg = img.width / img.height, rCan = W / H;
-        let dw=W, dh=H;
-        if(rImg > rCan){ dh = W / rImg; dw = W; } else { dw = H * rImg; dh = H; }
-        const cx = (W - dw)/2, cy = (H - dh)/2;
-        ctx.drawImage(img, cx, cy, dw, dh);
+    function drawGradientBackdrop(ctx, x, y, w, h, alphaBottom, hardness){
+      const steps=24;
+      const grd=ctx.createLinearGradient(0,y+h,0,y);
+      for(let i=0;i<=steps;i++){
+        const t=i/steps;
+        const a=alphaBottom*Math.pow(1-t,hardness);
+        grd.addColorStop(1-t,`rgba(0,0,0,${a})`);
       }
-
-      // text metrics
-      const fs = state.settings.fontSize;
-      const lh = Math.max(1, state.settings.lineHeight) * fs;
-      ctx.font = `${fs}px ${state.settings.fontFamily}`;
-      ctx.textAlign = state.settings.textAlign;
-      const pad = state.settings.padding;
-      const maxW = W - pad*2;
-      const lines = wrapLines(ctx, slide.text, maxW);
-
-      // overlay independent from text: sits at bottom
-      const overlayH = Math.round(H * (state.settings.overlayHeightPct/100));
-      const overlayTop = H - overlayH;
-      drawGradientBackdrop(ctx, 0, overlayTop, W, overlayH, state.settings.overlayAlpha, state.settings.overlayHardness);
-
-      // text block anchored from bottom by offset
-      const textBottom = H - state.settings.textBottomOffset;
-      let y = textBottom - (lines.length-1)*lh; // last line touches bottom offset (with padding accounted below)
-      // shift up by padding so there's a gap to bottom
-      y -= Math.max(0, (fs - pad));
-      const x = (state.settings.textAlign==='left') ? pad : (state.settings.textAlign==='center' ? W/2 : W - pad);
-      ctx.fillStyle = state.settings.textColor;
-
-      if(state.settings.textShadow>0){
-        ctx.save();
-        ctx.shadowColor = `rgba(0,0,0,${state.settings.textShadow})`;
-        ctx.shadowBlur = 12; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-        for(const ln of lines){ ctx.fillText(ln, x, y); y += lh; if(y > H - pad) break; }
-        ctx.restore();
-      } else {
-        for(const ln of lines){ ctx.fillText(ln, x, y); y += lh; if(y > H - pad) break; }
-      }
-
-      if(state.settings.showArrow && index < state.slides.length-1){
-        ctx.save(); ctx.globalAlpha = 0.75; ctx.fillStyle = '#ffffff';
-        const size = 36, ax = W - 24, ay = H/2;
-        ctx.beginPath(); ctx.moveTo(ax - size/2, ay - size/2);
-        ctx.lineTo(ax + size/2, ay); ctx.lineTo(ax - size/2, ay + size/2);
-        ctx.closePath(); ctx.fill(); ctx.restore();
-      }
-
-      endClip(ctx, clipped);
+      ctx.fillStyle=grd; ctx.fillRect(x,y,w,h);
     }
 
-    function renderSlideCanvas(cv, index){
-      const s = state.slides[index];
-      const ctx = cv.getContext('2d');
-      if(s.imgSrc && !s._img){
-        s._img = new Image();
-        s._img.onload = ()=>{ drawFrame(ctx, s, index); };
-        s._img.src = s.imgSrc;
-      }
-      drawFrame(ctx, s, index);
-    }
-
-    function renderToCanvas(index, canvas){
-      return new Promise((resolve)=>{
-        const s = state.slides[index];
-        const ctx = canvas.getContext('2d');
-        const doDraw = ()=>{ drawFrame(ctx, s, index); resolve(); };
-        if(s.imgSrc){
-          if(s._img && s._img.complete){ doDraw(); }
-          else { const img = new Image(); img.onload=()=>{ s._img=img; doDraw(); }; img.src=s.imgSrc; }
-        } else doDraw();
+    function renderSlideCanvas(cv,index){
+      const s=state.slides[index]; const ctx=cv.getContext('2d');
+      ctx.fillStyle=state.settings.bgColor; ctx.fillRect(0,0,W,H);
+      if(s.imgSrc){ if(!s._img){ s._img=new Image(); s._img.onload=()=>renderSlideCanvas(cv,index); s._img.src=s.imgSrc; return; }
+        const img=s._img; const rImg=img.width/img.height,rCan=W/H; let dw=W,dh=H;
+        if(rImg>rCan){ dh=W/rImg; dw=W; } else { dw=H*rImg; dh=H; }
+        const cx=(W-dw)/2, cy=(H-dh)/2; ctx.drawImage(img,cx,cy,dw,dh);}
+      // overlay
+      const overlayH=Math.round(H*(state.settings.overlayHeightPct/100));
+      const overlayTop=H-overlayH;
+      drawGradientBackdrop(ctx,0,overlayTop,W,overlayH,state.settings.overlayAlpha,state.settings.overlayHardness);
+      // text
+      const fs=state.settings.fontSize, lh=fs*state.settings.lineHeight;
+      const pad=state.settings.padding; const maxW=W-pad*2;
+      let tokens=parseBold(s.text);
+      ctx.textAlign=state.settings.textAlign;
+      const lines=wrapLines(ctx,tokens,maxW);
+      let y=H-state.settings.textBottomOffset-(lines.length-1)*lh;
+      const x=(state.settings.textAlign==='left')?pad:(state.settings.textAlign==='center'?W/2:W-pad);
+      lines.forEach(line=>{
+        let offsetX=x;
+        line.forEach(tok=>{
+          ctx.font=`${tok.bold?'bold':''} ${fs}px ${state.settings.fontFamily}`;
+          ctx.fillStyle=state.settings.textColor;
+          ctx.fillText(tok.text,offsetX,y);
+          offsetX+=ctx.measureText(tok.text).width;
+        });
+        y+=lh;
       });
     }
 
     function replacePhoto(index){
-      elFile.onchange = async (e)=>{
-        const file = e.target.files && e.target.files[0];
-        if(!file) return;
-        const dataURL = await fileToDataURL(file);
-        state.slides[index].imgSrc = dataURL;
-        state.slides[index]._img = null;
-        renderAll(); queueAutosave(); elFile.value='';
-      };
-      elFile.click();
+      elFile.onchange=async e=>{
+        const f=e.target.files[0]; if(!f)return;
+        const data=await fileToDataURL(f); state.slides[index].imgSrc=data; state.slides[index]._img=null; renderAll(); elFile.value='';
+      }; elFile.click();
     }
-    function fileToDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); }); }
-
-    async function downloadSlide(index){
-      const off = document.createElement('canvas'); off.width=W; off.height=H;
-      await renderToCanvas(index, off);
-      const a = document.createElement('a'); a.href = off.toDataURL('image/jpeg', 0.92); a.download = `slide-${index+1}.jpg`;
-      document.body.appendChild(a); a.click(); a.remove();
-    }
-
-    // autosave
-    const SAVE_KEY='icc_session_v10';
-    function queueAutosave(){ state.autosaveTS=Date.now(); }
-    setInterval(()=>{ if(!state.autosaveTS) return;
-      if(Date.now()-state.autosaveTS>=2900){ try{
-        const payload={slides:state.slides.map(s=>({text:s.text,imgSrc:s.imgSrc})),settings:state.settings,story:elStory.value};
-        sessionStorage.setItem(SAVE_KEY, JSON.stringify(payload)); state.autosaveTS=0;
-      }catch(e){} } },1000);
-
-    function restore(){
-      try{
-        const raw=sessionStorage.getItem(SAVE_KEY); if(!raw) return; const data=JSON.parse(raw);
-        Object.assign(state.settings, data.settings||{});
-        ['fontFamily','textAlign','fontSize','lineHeight','padding','overlayHeightPct','overlayAlpha','overlayHardness','cornerRadius','textColor','textShadow','textBottomOffset','showArrow','bgColor']
-          .forEach(id=>{ const el=document.getElementById(id); if(!el) return; if(el.type==='checkbox'){ el.checked=!!state.settings[id]; } else { el.value=state.settings[id]; } });
-        state.slides=(data.slides||[]).map(s=>({text:s.text||'', imgSrc:s.imgSrc||null, _img:null}));
-        elStory.value=data.story||'';
-      }catch(e){}
-    }
-
-    document.getElementById('clearBtn').addEventListener('click', ()=>{
-      if(!confirm('Reset everything to defaults?')) return;
-      state.slides=[]; elStory.value='';
-      Object.assign(state.settings, {
-        fontFamily: "'Montserrat', Arial, sans-serif",
-        fontSize: 45, textAlign:'left', padding:64, lineHeight:1.25, textColor:'#ffffff',
-        overlayAlpha:0.6, overlayHeightPct:20, overlayHardness:1,
-        cornerRadius:0, textShadow:0.8, textBottomOffset:48,
-        showArrow:false, bgColor:'#000000'
-      });
-      ['fontFamily','textAlign','fontSize','lineHeight','padding','overlayHeightPct','overlayAlpha','overlayHardness','cornerRadius','textColor','textShadow','textBottomOffset','showArrow','bgColor']
-        .forEach(id=>{ const el=document.getElementById(id); if(!el) return; if(el.type==='checkbox'){ el.checked=!!state.settings[id]; } else { el.value=state.settings[id]; } });
-      sessionStorage.removeItem(SAVE_KEY); renderSlidesList(); renderAll();
-    });
-
-    // init
-    restore(); renderSlidesList(); renderAll(); if(elStory.value) splitTextToSlides(elStory.value);
+    function fileToDataURL(file){return new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(file);});}
+    function renderAll(){document.querySelectorAll('canvas.thumb').forEach(cv=>renderSlideCanvas(cv,parseInt(cv.dataset.index))); }
+    function downloadSlide(index){const cv=document.querySelectorAll('canvas.thumb')[index];const a=document.createElement('a');a.href=cv.toDataURL('image/jpeg',0.92);a.download=`slide-${index+1}.jpg`;a.click();}
   </script>
 </body>
 </html>
