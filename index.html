@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>Instagram Carousel Creator</title>
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;700&family=Roboto:wght@400;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root{ --bg:#0f1115;--panel:#171a21;--ink:#e8ecf1;--muted:#98a2b3;--accent:#7c9cff;--line:#222736;--btn:#23293a;--warn:#ef4444; }
@@ -16,7 +15,6 @@
     label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
     textarea{width:100%;min-height:140px;resize:vertical;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;line-height:1.5}
     select,input[type="number"],input[type="text"],input[type="color"]{width:100%;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px}
-    input[type="number"]{appearance:textfield}
     .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .btn{appearance:none;border:1px solid var(--line);background:var(--btn);color:var(--ink);padding:10px 12px;border-radius:12px;font-weight:600}
     .btn.secondary{background:#0a0c12}
@@ -50,7 +48,8 @@
       <label for="story">Story (separate slides with an empty line)</label>
       <textarea id="story" placeholder="Paste your story here.
 
-Each paragraph separated by an empty line becomes a new slide. Use **bold** / __bold__ and *italic* / _italic_."></textarea>
+Each paragraph separated by an empty line becomes a new slide.
+Use **bold** / __bold__ and *italic* / _italic_."></textarea>
       <div class="hint" style="margin-top:8px">Auto-save every ~3s (this session). Slides generate automatically.</div>
 
       <details style="margin-top:12px">
@@ -109,7 +108,7 @@ Each paragraph separated by an empty line becomes a new slide. Use **bold** / __
   <input id="filePicker" type="file" accept="image/*" style="display:none" />
 
   <script>
-    const W = 1080, H = 1350; // 4:5
+    const W = 1080, H = 1350;
     const state = {
       slides: [],
       settings: {
@@ -119,9 +118,9 @@ Each paragraph separated by an empty line becomes a new slide. Use **bold** / __
         padding: 64,
         lineHeight: 1.25,
         textColor: '#ffffff',
-        overlayAlpha: 0.8,        // darkest bottom opacity
-        overlayHeightPct: 20,     // gradient height
-        overlayHardness: 1,       // curve: >1 = denser at bottom
+        overlayAlpha: 0.8,
+        overlayHeightPct: 20,
+        overlayHardness: 1,
         cornerRadius: 0,
         textShadow: 0.8,
         bgColor: '#000000',
@@ -133,71 +132,61 @@ Each paragraph separated by an empty line becomes a new slide. Use **bold** / __
     const elSlides = document.getElementById('slides');
     const elFile = document.getElementById('filePicker');
 
-    // ---- Inline markup: **bold** / __bold__, *italic* / _italic_ ----
+    // --- Inline markup (**bold** / *italic*) ---
     function parseInline(text){
-      const tokens = [];
-      let i = 0;
-      while (i < text.length){
-        if ((text.startsWith('**', i) || text.startsWith('__', i))){
-          const m = text.substr(i,2);
-          const end = text.indexOf(m, i+2);
-          if (end !== -1){ tokens.push({text:text.slice(i+2,end), bold:true, italic:false}); i=end+2; continue; }
+      const tokens=[]; let i=0;
+      while(i<text.length){
+        if(text.startsWith('**',i)||text.startsWith('__',i)){
+          const m=text.substr(i,2), end=text.indexOf(m,i+2);
+          if(end!==-1){ tokens.push({text:text.slice(i+2,end),bold:true,italic:false}); i=end+2; continue; }
         }
-        if (text[i]==='*' || text[i]==='_'){
-          const m = text[i];
-          const end = text.indexOf(m, i+1);
-          if (end !== -1){ tokens.push({text:text.slice(i+1,end), bold:false, italic:true}); i=end+1; continue; }
+        if(text[i]==='*'||text[i]==='_'){
+          const m=text[i], end=text.indexOf(m,i+1);
+          if(end!==-1){ tokens.push({text:text.slice(i+1,end),bold:false,italic:true}); i=end+1; continue; }
         }
-        let j=i;
-        while (j<text.length && !(text.startsWith('**', j)||text.startsWith('__', j)||text[j]==='*'||text[j]==='_')) j++;
-        tokens.push({text:text.slice(i,j), bold:false, italic:false});
-        i=j;
+        let j=i; while(j<text.length && !(text.startsWith('**',j)||text.startsWith('__',j)||text[j]==='*'||text[j]==='_')) j++;
+        tokens.push({text:text.slice(i,j),bold:false,italic:false}); i=j;
       }
       return tokens;
     }
     function setFont(ctx, fs, fam, bold, italic){ ctx.font=`${bold?'bold ':''}${italic?'italic ':''}${fs}px ${fam}`; }
-
     function layoutLines(ctx, tokens, maxW, fs, fam){
-      const lines=[]; let line=[]; let lineW=0;
-      const measure=(txt,b,i)=>{ setFont(ctx,fs,fam,b,i); return ctx.measureText(txt).width; };
-      for(const t of tokens){
-        const parts = t.text.split(/(\s+)/); // keep spaces
+      const lines=[]; let line=[], lineW=0;
+      const measure=(t,b,i)=>{ setFont(ctx,fs,fam,b,i); return ctx.measureText(t).width; };
+      for(const tok of tokens){
+        const parts=tok.text.split(/(\s+)/);
         for(const p of parts){
           if(p==='') continue;
-          const w = measure(p, t.bold, t.italic);
-          if(lineW + w > maxW && line.length){
-            lines.push({runs:line, width:lineW});
-            line=[{text:p,bold:t.bold,italic:t.italic,w}]; lineW=w;
-          }else{
-            line.push({text:p,bold:t.bold,italic:t.italic,w}); lineW+=w;
-          }
+          const w=measure(p,tok.bold,tok.italic);
+          if(lineW+w>maxW && line.length){ lines.push({runs:line,width:lineW}); line=[{text:p,bold:tok.bold,italic:tok.italic,w}]; lineW=w; }
+          else { line.push({text:p,bold:tok.bold,italic:tok.italic,w}); lineW+=w; }
         }
       }
-      if(line.length) lines.push({runs:line, width:lineW});
+      if(line.length) lines.push({runs:line,width:lineW});
       return lines;
     }
 
-    function drawGradientBackdrop(ctx, x, y, w, h, alphaBottom, hardness){
+    // gradient from very bottom upwards (darkest at bottom edge)
+    function drawGradient(ctx, x, y, w, h, alphaBottom, hardness){
       const steps=24;
-      const grd=ctx.createLinearGradient(0, y+h, 0, y); // bottom -> top
+      const g=ctx.createLinearGradient(0, y+h, 0, y); // bottom -> top
       for(let i=0;i<=steps;i++){
-        const t=i/steps; // 0 bottom .. 1 top
-        const a=alphaBottom * Math.pow(1 - t, hardness);
-        grd.addColorStop(1 - t, `rgba(0,0,0,${a})`);
+        const t=i/steps;                  // 0 bottom .. 1 top
+        const a=alphaBottom*Math.pow(1-t, hardness);
+        g.addColorStop(1-t, `rgba(0,0,0,${a})`);
       }
-      ctx.fillStyle=grd; ctx.fillRect(x,y,w,h);
+      ctx.fillStyle=g; ctx.fillRect(x,y,w,h);
     }
 
-    function renderSlideCanvas(cv, index){
-      const s = state.slides[index];
-      const ctx = cv.getContext('2d');
+    function renderSlideCanvas(cv,index){
+      const s=state.slides[index]; const ctx=cv.getContext('2d');
       ctx.textBaseline='alphabetic';
 
-      // bg
-      ctx.fillStyle = state.settings.bgColor; ctx.fillRect(0,0,W,H);
+      // background
+      ctx.fillStyle=state.settings.bgColor; ctx.fillRect(0,0,W,H);
 
-      // PHOTO — cover (no empty background)
-      if (s.imgSrc){
+      // photo: COVER (no gaps)
+      if(s.imgSrc){
         if(!s._img){ s._img=new Image(); s._img.onload=()=>renderSlideCanvas(cv,index); s._img.src=s.imgSrc; return; }
         const img=s._img;
         const scale=Math.max(W/img.width, H/img.height); // cover
@@ -206,36 +195,30 @@ Each paragraph separated by an empty line becomes a new slide. Use **bold** / __
         ctx.drawImage(img, dx, dy, dw, dh);
       }
 
-      // GRADIENT — starts at very bottom of photo/canvas
-      const overlayH=Math.round(H*(state.settings.overlayHeightPct/100));
-      drawGradientBackdrop(ctx, 0, H-overlayH, W, overlayH, state.settings.overlayAlpha, state.settings.overlayHardness);
+      // gradient overlay at the very bottom
+      const oh=Math.round(H*(state.settings.overlayHeightPct/100));
+      drawGradient(ctx, 0, H-oh, W, oh, state.settings.overlayAlpha, state.settings.overlayHardness);
 
-      // TEXT
-      const fs=state.settings.fontSize, lh=fs*state.settings.lineHeight;
-      const fam=state.settings.fontFamily;
+      // text
+      const fs=state.settings.fontSize, lh=fs*state.settings.lineHeight, fam=state.settings.fontFamily;
       const pad=state.settings.padding, maxW=W-pad*2;
       const lines=layoutLines(ctx, parseInline(s.text||''), maxW, fs, fam);
       const bottom=H - state.settings.textBottomOffset;
 
       lines.forEach((line,i)=>{
         const y = bottom - (lines.length-1-i)*lh;
-        let xStart = pad;
-        if(state.settings.textAlign==='center') xStart = (W - line.width)/2;
-        if(state.settings.textAlign==='right')  xStart = W - pad - line.width;
+        let xStart=pad;
+        if(state.settings.textAlign==='center') xStart=(W-line.width)/2;
+        if(state.settings.textAlign==='right')  xStart=W-pad-line.width;
         let x=xStart;
         for(const run of line.runs){
           setFont(ctx, fs, fam, !!run.bold, !!run.italic);
           ctx.fillStyle=state.settings.textColor;
           if(state.settings.textShadow>0){
-            ctx.save();
-            ctx.shadowColor = `rgba(0,0,0,${state.settings.textShadow})`;
-            ctx.shadowBlur=12; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;
-            ctx.fillText(run.text, x, y);
-            ctx.restore();
-          }else{
-            ctx.fillText(run.text, x, y);
-          }
-          x += run.w;
+            ctx.save(); ctx.shadowColor=`rgba(0,0,0,${state.settings.textShadow})`;
+            ctx.shadowBlur=12; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0; ctx.fillText(run.text,x,y); ctx.restore();
+          } else ctx.fillText(run.text,x,y);
+          x+=run.w;
         }
       });
     }
@@ -243,9 +226,9 @@ Each paragraph separated by an empty line becomes a new slide. Use **bold** / __
     function renderAll(){ document.querySelectorAll('canvas.thumb').forEach(cv=>renderSlideCanvas(cv, parseInt(cv.dataset.index,10))); }
 
     function splitTextToSlides(t){
-      const parts = t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
-      const old = state.slides;
-      state.slides = parts.map((p,i)=>({ text:p, imgSrc:(old[i] && old[i].imgSrc) || undefined, _img:null }));
+      const parts=t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
+      const old=state.slides;
+      state.slides=parts.map((p,i)=>({text:p, imgSrc:(old[i]&&old[i].imgSrc)||undefined, _img:null}));
       renderSlidesList(); renderAll();
     }
     elStory.addEventListener('input', ()=>{ splitTextToSlides(elStory.value); });
@@ -256,7 +239,6 @@ Each paragraph separated by an empty line becomes a new slide. Use **bold** / __
       wrap.appendChild(c);
 
       const actions=document.createElement('div'); actions.className='cardActions';
-
       const replaceBtn=document.createElement('button'); replaceBtn.className='btn secondary'; replaceBtn.textContent='Replace photo';
       replaceBtn.addEventListener('click',()=>replacePhoto(index));
       actions.appendChild(replaceBtn);
@@ -272,8 +254,7 @@ Each paragraph separated by an empty line becomes a new slide. Use **bold** / __
     }
 
     function renderSlidesList(){
-      elSlides.innerHTML='';
-      state.slides.forEach((_,i)=>elSlides.appendChild(createSlideCard(i)));
+      elSlides.innerHTML=''; state.slides.forEach((_,i)=>elSlides.appendChild(createSlideCard(i)));
       if(state.slides.length===0){
         const empty=document.createElement('div'); empty.className='hint';
         empty.textContent='Type your story — slides appear automatically.'; elSlides.appendChild(empty);
@@ -292,16 +273,14 @@ Each paragraph separated by an empty line becomes a new slide. Use **bold** / __
 
     function downloadSlide(index){
       const cv=document.querySelectorAll('canvas.thumb')[index];
-      renderSlideCanvas(cv,index); // refresh before save
-      const a=document.createElement('a');
-      a.href=cv.toDataURL('image/jpeg',0.92);
-      a.download=`slide-${index+1}.jpg`;
+      renderSlideCanvas(cv,index);
+      const a=document.createElement('a'); a.href=cv.toDataURL('image/jpeg',0.92); a.download=`slide-${index+1}.jpg`;
       document.body.appendChild(a); a.click(); a.remove();
     }
 
-    // Init
+    // init
     renderSlidesList(); renderAll();
     if(elStory.value) splitTextToSlides(elStory.value);
   </script>
 </body>
-</html>
+                                        </html>
