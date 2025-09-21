@@ -1,21 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>Instagram Carousel Creator</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;700&family=Roboto:wght@400;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    :root{ --bg:#0f1115;--panel:#171a21;--ink:#e8ecf1;--muted:#98a2b3;--accent:#7c9cff;--line:#222736;--btn:#23293a;--warn:#ef4444; }
+    :root{
+      --bg:#0f1115;--panel:#171a21;--ink:#e8ecf1;--muted:#98a2b3;--accent:#7c9cff;--line:#222736;--btn:#23293a;--warn:#ef4444;
+    }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,var(--bg),rgba(15,17,21,.6));backdrop-filter: blur(6px);}
     .wrap{max-width:960px;margin:0 auto;padding:12px}
     .col{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
     label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-    textarea{width:100%;min-height:140px;resize:vertical;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;line-height:1.5}
-    select,input[type="number"],input[type="text"],input[type="color"]{width:100%;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px}
-    input[type="number"]{appearance:textfield}
+    textarea{width:100%;min-height:120px;resize:vertical;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;line-height:1.5}
+    select,input[type="number"],input[type="text"]{width:100%;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px}
     .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .btn{appearance:none;border:1px solid var(--line);background:var(--btn);color:var(--ink);padding:10px 12px;border-radius:12px;font-weight:600}
     .btn.secondary{background:#0a0c12}
@@ -23,9 +23,10 @@
     .hint{color:var(--muted);font-size:12px}
     details{background:#0a0c12;border:1px solid var(--line);border-radius:12px;padding:10px}
     summary{cursor:pointer;color:var(--ink);font-weight:600}
+
     .slides{display:flex;flex-direction:column;gap:14px;margin-top:12px}
     .slideCard{position:relative;background:#0b0e15;border:1px solid var(--line);border-radius:14px;padding:10px}
-    canvas.thumb{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#000;touch-action: pan-y;}
+    canvas.thumb{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#000}
     .cardActions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
     .iconBtn{display:inline-flex;align-items:center;gap:8px}
     .iconBtn svg{width:18px;height:18px}
@@ -39,242 +40,275 @@
   <header>
     <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:10px;flex:1 1 auto">
-        <div class="badge">📸 Instagram Carousel Creator <span class="accent">1080×1350</span></div>
+        <div class="badge">📸 Instagram Carousel Creator <span class="accent">1080×1320</span></div>
       </div>
     </div>
   </header>
 
   <main class="wrap">
     <div class="col">
-      <label for="story">Story (separate slides with an empty line)</label>
-      <textarea id="story" placeholder="Paste your story here.
+      <label for="story">История (каждый слайд — отдельный абзац, разделённый пустой строкой)</label>
+      <textarea id="story" placeholder="Вставьте текст истории.
 
-Each paragraph separated by an empty line becomes a new slide. Use **bold** / __bold__ and *italic* / _italic_."></textarea>
-      <div class="hint" style="margin-top:8px">Auto-save every ~3s (this session). Slides generate automatically.</div>
+Каждый абзац станет отдельным слайдом. Используйте **жирный** и *курсив* при необходимости."></textarea>
 
       <details style="margin-top:12px">
-        <summary>Advanced style options (optional)</summary>
+        <summary>Доп. настройки текста</summary>
         <div class="controls" style="margin-top:10px">
           <div>
-            <label>Font family</label>
+            <label>Шрифт</label>
             <select id="fontFamily">
-              <option value="'Montserrat', Arial, sans-serif">Montserrat</option>
-              <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
-              <option value="'Open Sans', Arial, sans-serif">Open Sans Regular</option>
-              <option value="Roboto, Arial, sans-serif">Roboto Regular</option>
-              <option value="'PT Sans', Arial, sans-serif">PT Sans</option>
               <option value="Arial, sans-serif">Arial</option>
               <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
-              <option value="'Times New Roman', Times, serif">Times New Roman</option>
-              <option value="Georgia, serif">Georgia</option>
-              <option value="'Courier New', Courier, monospace">Courier New</option>
+              <option value="Roboto, Arial, sans-serif">Roboto</option>
+              <option value="'Open Sans', Arial, sans-serif">Open Sans</option>
+              <option value="'PT Sans', Arial, sans-serif">PT Sans</option>
+              <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
             </select>
           </div>
           <div>
-            <label>Text align</label>
+            <label>Размер шрифта (px)</label>
+            <input id="fontSize" type="number" min="16" max="96" step="1" value="40" />
+          </div>
+          <div>
+            <label>Выравнивание</label>
             <select id="textAlign">
-              <option value="left">Left</option>
-              <option value="center">Center</option>
-              <option value="right">Right</option>
+              <option value="left">Слева</option>
+              <option value="center">По центру</option>
+              <option value="right">Справа</option>
             </select>
           </div>
+          <div>
+            <label>Отступы текста (px)</label>
+            <input id="padding" type="number" min="0" max="160" value="64" />
+          </div>
+          <div>
+            <label>Межстрочный интервал</label>
+            <input id="lineHeight" type="number" min="1" max="2.4" step="0.05" value="1.25" />
+          </div>
+          <div>
+            <label>Отступ от низа (px)</label>
+            <input id="textBottomOffset" type="number" min="0" max="400" value="130" />
+          </div>
+          <div>
+            <label>Цвет текста</label>
+            <input id="textColor" type="text" value="#ffffff" />
+          </div>
+          <div>
+            <label>Тень текста (0–1)</label>
+            <input id="textShadow" type="number" min="0" max="1" step="0.05" value="0.8" />
+          </div>
 
-          <div><label>Base font size (px)</label><input id="fontSize" type="number" value="40" /></div>
-          <div><label>Line height</label><input id="lineHeight" type="number" step="0.01" value="1.25" /></div>
-          <div><label>Text padding (px)</label><input id="padding" type="number" value="64" /></div>
-
-          <div><label>Fade height (% of canvas)</label><input id="overlayHeightPct" type="number" min="10" value="22" /></div>
-          <div><label>Darkest opacity (0–1)</label><input id="overlayAlpha" type="number" step="0.01" value="0.68" /></div>
-          <div><label>Gradient curve (0.5–3)</label><input id="overlayHardness" type="number" step="0.05" value="1.3" /></div>
-
-          <div><label>Corner radius (px)</label><input id="cornerRadius" type="number" value="0" /></div>
-          <div><label>Text color</label><input id="textColor" type="text" value="#ffffff" /></div>
-          <div><label>Shadow (0–1)</label><input id="textShadow" type="number" step="0.01" value="0.8" /></div>
-
-          <div><label>Text bottom offset (px)</label><input id="textBottomOffset" type="number" value="130" /></div>
-          <div><label>Background color (under photos)</label><input id="bgColor" type="color" value="#000000" /></div>
+          <!-- ▼ Настройки тени под текстом -->
+          <div>
+            <label>Fade height (% of canvas)</label>
+            <input id="overlayHeightPct" type="number" min="5" max="80" step="1" value="60" />
+          </div>
+          <div>
+            <label>Backdrop opacity (0–1)</label>
+            <input id="overlayAlpha" type="number" min="0" max="1" step="0.01" value="1" />
+          </div>
+          <div>
+            <label>Corner radius (px)</label>
+            <input id="cornerRadius" type="number" min="0" max="40" step="1" value="0" />
+          </div>
         </div>
       </details>
 
-      <div class="hint" style="margin:12px 0 8px">Use “Replace photo” to add an image • Tap the download icon to save JPG</div>
       <div id="slides" class="slides"></div>
     </div>
   </main>
 
   <footer>
-    <button id="clearBtn" class="btn warn clear">Clear Results — reset all (text, photos, settings)</button>
+    <button id="clearBtn" class="btn warn clear">Clear Results — сбросить всё (текст, фото, настройки)</button>
   </footer>
 
   <input id="filePicker" type="file" accept="image/*" style="display:none" />
 
   <script>
-    const W = 1080, H = 1350; // 4:5
-    const state = {
-      slides: [],
-      settings: {
-        fontFamily: "'Montserrat', Arial, sans-serif",
-        fontSize: 40,
-        textAlign: 'left',
-        padding: 64,
-        lineHeight: 1.25,
-        textColor: '#ffffff',
-        overlayAlpha: 0.68,        // darkest bottom opacity
-        overlayHeightPct: 22,      // gradient height
-        overlayHardness: 1.3,      // concentration near the bottom
-        cornerRadius: 0,
-        textShadow: 0.8,
-        bgColor: '#000000',
-        textBottomOffset: 130
+    const W=1080,H=1320; // 3:4
+
+    const state={
+      slides:[],
+      settings:{
+        fontFamily:'Arial, sans-serif',
+        fontSize:40,
+        textAlign:'left',
+        padding:64,
+        lineHeight:1.25,
+        textColor:'#ffffff',
+        textShadow:0.8,
+        textBottomOffset:130,
+
+        // ▼ тень под текстом (как на скрине)
+        overlayHeightPct:60,  // % высоты холста
+        overlayAlpha:1,       // насыщенность у нижней кромки
+        cornerRadius:0        // скругление холста (опционально)
       }
     };
 
-    const elStory = document.getElementById('story');
-    const elSlides = document.getElementById('slides');
-    const elFile = document.getElementById('filePicker');
+    const elStory=document.getElementById('story');
+    const elSlides=document.getElementById('slides');
+    const elFile=document.getElementById('filePicker');
 
-    // inline markup: **bold**/**__** and *italic* / _italic_
-    function parseInline(text){
-      const tokens=[]; let i=0;
-      while(i<text.length){
-        if(text.startsWith('**',i)||text.startsWith('__',i)){
-          const m=text.substr(i,2), end=text.indexOf(m,i+2);
-          if(end!==-1){ tokens.push({text:text.slice(i+2,end),bold:true,italic:false}); i=end+2; continue; }
-        }
-        if(text[i]==='*'||text[i]==='_'){
-          const m=text[i], end=text.indexOf(m,i+1);
-          if(end!==-1){ tokens.push({text:text.slice(i+1,end),bold:false,italic:true}); i=end+1; continue; }
-        }
-        let j=i; while(j<text.length && !(text.startsWith('**',j)||text.startsWith('__',j)||text[j]==='*'||text[j]==='_')) j++;
-        tokens.push({text:text.slice(i,j),bold:false,italic:false}); i=j;
-      }
-      return tokens;
-    }
-    function setFont(ctx, fs, fam, bold, italic){ ctx.font=`${bold?'bold ':''}${italic?'italic ':''}${fs}px ${fam}`; }
-    function layoutLines(ctx, tokens, maxW, fs, fam){
-      const lines=[]; let line=[], lineW=0;
-      const measure=(t,b,i)=>{ setFont(ctx,fs,fam,b,i); return ctx.measureText(t).width; };
-      for(const tok of tokens){
-        const parts=tok.text.split(/(\\s+)/);
-        for(const p of parts){ if(p==='') continue; const w=measure(p,tok.bold,tok.italic);
-          if(lineW+w>maxW && line.length){ lines.push({runs:line,width:lineW}); line=[{text:p,bold:tok.bold,italic:tok.italic,w}]; lineW=w; }
-          else { line.push({text:p,bold:tok.bold,italic:tok.italic,w}); lineW+=w; }
-        }
-      }
-      if(line.length) lines.push({runs:line,width:lineW});
-      return lines;
+    // ---- helpers ----
+    function parseInline(text){const tokens=[];let i=0;while(i<text.length){if(text.startsWith('**',i)||text.startsWith('__',i)){const m=text.substr(i,2),e=text.indexOf(m,i+2);if(e!==-1){tokens.push({t:text.slice(i+2,e),b:true,i:false});i=e+2;continue}}if(text[i]==='*'||text[i]==='_'){const m=text[i],e=text.indexOf(m,i+1);if(e!==-1){tokens.push({t:text.slice(i+1,e),b:false,i:true});i=e+1;continue}}let j=i;while(j<text.length&&!(text.startsWith('**',j)||text.startsWith('__',j)||text[j]==='*'||text[j]==='_'))j++;tokens.push({t:text.slice(i,j),b:false,i:false});i=j}return tokens}
+    function setFont(ctx,fs,fam,b,i){ctx.font=`${b?'bold ':''}${i?'italic ':''}${fs}px ${fam}`}
+    function layoutLines(ctx,tokens,maxW,fs,fam){const lines=[];let line=[],w=0;const meas=(txt,b,i)=>{setFont(ctx,fs,fam,b,i);return ctx.measureText(txt).width};for(const tok of tokens){const parts=tok.t.split(/(\s+)/);for(const p of parts){if(!p)continue;const ww=meas(p,tok.b,tok.i);if(w+ww>maxW&&line.length){lines.push({runs:line,width:w});line=[{text:p,b:tok.b,i:tok.i,w:ww}];w=ww}else{line.push({text:p,b:tok.b,i:tok.i,w:ww});w+=ww}}}if(line.length)lines.push({runs:line,width:w});return lines}
+
+    // скругление холста (по желанию)
+    function clipRoundRect(ctx, x, y, w, h, r){
+      if(!r) return false;
+      const rr=Math.min(r, Math.min(w,h)/2);
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x+rr,y);
+      ctx.arcTo(x+w,y,  x+w,y+h, rr);
+      ctx.arcTo(x+w,y+h,x,  y+h, rr);
+      ctx.arcTo(x,  y+h,x,  y,   rr);
+      ctx.arcTo(x,  y,  x+w,y,   rr);
+      ctx.closePath();
+      ctx.clip();
+      return true;
     }
 
-    // gradient from very bottom upwards (darkest at bottom edge)
-    function drawGradient(ctx, x, y, w, h, alphaBottom, hardness){
-      const steps=24;
-      const g=ctx.createLinearGradient(0, y+h, 0, y); // bottom -> top
-      for(let i=0;i<=steps;i++){
-        const t=i/steps;                  // 0 bottom .. 1 top
-        const a=alphaBottom*Math.pow(1-t, hardness);
-        g.addColorStop(1-t, `rgba(0,0,0,${a})`);
-      }
-      ctx.fillStyle=g; ctx.fillRect(x,y,w,h);
+    // тень снизу вверх: чёрная у кромки → светлее вверх
+    function drawBottomFade(ctx, canvasH, overlayPct, alpha){
+      const oh=Math.max(1, Math.round(canvasH*(overlayPct/100)));
+      const yBottom=canvasH;
+      const yTop=canvasH-oh;
+      const g=ctx.createLinearGradient(0, yBottom, 0, yTop); // снизу → вверх
+      // плавная «киношная» растяжка
+      const stops=[[0.00,alpha],[0.35,alpha*0.7],[0.70,alpha*0.35],[1.00,0]];
+      stops.forEach(([t,a])=>g.addColorStop(t,`rgba(0,0,0,${a})`));
+      ctx.fillStyle=g; ctx.fillRect(0, yTop, W, oh);
     }
+
+    // ---- core ----
+    function splitTextToSlides(t){
+      const parts=t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
+      const old=state.slides;
+      state.slides=parts.map((p,i)=>({text:p,imgSrc:(old[i]&&old[i].imgSrc)||undefined,_img:null}));
+      renderSlidesList();renderAll();
+    }
+    elStory.addEventListener('input',()=>splitTextToSlides(elStory.value));
+
+    function createSlideCard(index){
+      const wrap=document.createElement('div');wrap.className='slideCard';
+      const c=document.createElement('canvas');c.width=W;c.height=H;c.className='thumb';c.dataset.index=index;wrap.appendChild(c);
+      const actions=document.createElement('div');actions.className='cardActions';
+      const replaceBtn=document.createElement('button');replaceBtn.className='btn secondary';replaceBtn.textContent='Replace photo';replaceBtn.addEventListener('click',()=>replacePhoto(index));actions.appendChild(replaceBtn);
+      const dlBtn=document.createElement('button');dlBtn.className='btn secondary iconBtn';dlBtn.title='Скачать JPG';dlBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a1 1 0 011 1v9.586l2.293-2.293a1 1 0 111.414 1.414l-4.001 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L11 13.586V4a1 1 0 011-1z"/><path d="M5 20a2 2 0 002 2h10a2 2 0 002-2v-3a1 1 0 10-2 0v3H7v-3a1 1 0 10-2 0v3z"/></svg>`;dlBtn.addEventListener('click',()=>downloadSlide(index));actions.appendChild(dlBtn);
+      wrap.appendChild(actions);
+      renderSlideCanvas(c,index);return wrap;
+    }
+
+    function renderSlidesList(){
+      elSlides.innerHTML='';
+      if(state.slides.length===0){const empty=document.createElement('div');empty.className='hint';empty.textContent='Начните с текста — слайды появятся автоматически.';elSlides.appendChild(empty);return}
+      state.slides.forEach((_,i)=>elSlides.appendChild(createSlideCard(i)));
+    }
+
+    function renderAll(){document.querySelectorAll('canvas.thumb').forEach(cv=>renderSlideCanvas(cv,parseInt(cv.dataset.index,10)))}
 
     function renderSlideCanvas(cv,index){
-      const s=state.slides[index]; const ctx=cv.getContext('2d');
-      ctx.textBaseline='alphabetic';
+      const s=state.slides[index];const ctx=cv.getContext('2d');
 
-      // background
-      ctx.fillStyle=state.settings.bgColor; ctx.fillRect(0,0,W,H);
+      // фон + необязательное скругление превью
+      const clipped = clipRoundRect(ctx, 0, 0, W, H, state.settings.cornerRadius);
+      ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
 
-      // photo: COVER (no gaps)
+      // фото (cover)
       if(s.imgSrc){
-        if(!s._img){ s._img=new Image(); s._img.onload=()=>renderSlideCanvas(cv,index); s._img.src=s.imgSrc; return; }
+        if(!s._img){
+          s._img=new Image();
+          s._img.onload=()=>renderSlideCanvas(cv,index);
+          s._img.src=s.imgSrc;
+          if(clipped) ctx.restore();
+          return;
+        }
         const img=s._img;
-        const scale=Math.max(W/img.width, H/img.height);
-        const dw=img.width*scale, dh=img.height*scale;
-        const dx=(W-dw)/2, dy=(H-dh)/2;
-        ctx.drawImage(img, dx, dy, dw, dh);
+        const scale=Math.max(W/img.width,H/img.height);
+        const dw=img.width*scale,dh=img.height*scale;
+        const dx=(W-dw)/2,dy=(H-dh)/2;
+        ctx.drawImage(img,dx,dy,dw,dh);
       }
 
-      // gradient overlay at the very bottom (min 10% height)
-      const oh=Math.max( Math.round(H*(state.settings.overlayHeightPct/100)), Math.round(H*0.10) );
-      drawGradient(ctx, 0, H-oh, W, oh, state.settings.overlayAlpha, state.settings.overlayHardness);
+      // ▼ тень под текстом (снизу → вверх)
+      drawBottomFade(ctx, H, state.settings.overlayHeightPct, state.settings.overlayAlpha);
 
-      // text
-      const fs=state.settings.fontSize, lh=fs*state.settings.lineHeight, fam=state.settings.fontFamily;
-      const pad=state.settings.padding, maxW=W-pad*2;
-      const lines=layoutLines(ctx, parseInline(s.text||''), maxW, fs, fam);
-      const bottom=H - state.settings.textBottomOffset;
+      if(clipped) ctx.restore(); // снять clip
+
+      // текст (c bold/italic)
+      const fs=state.settings.fontSize,lh=fs*state.settings.lineHeight,fam=state.settings.fontFamily;
+      const pad=state.settings.padding,maxW=W-pad*2;
+      const lines=layoutLines(ctx,parseInline(s.text||''),maxW,fs,fam);
+      const bottom=H-state.settings.textBottomOffset;
 
       lines.forEach((line,i)=>{
-        const y = bottom - (lines.length-1-i)*lh;
+        const y=bottom-(lines.length-1-i)*lh;
         let xStart=pad;
         if(state.settings.textAlign==='center') xStart=(W-line.width)/2;
         if(state.settings.textAlign==='right')  xStart=W-pad-line.width;
         let x=xStart;
         for(const run of line.runs){
-          setFont(ctx, fs, fam, !!run.bold, !!run.italic);
+          setFont(ctx,fs,fam,!!run.b,!!run.i);
           ctx.fillStyle=state.settings.textColor;
           if(state.settings.textShadow>0){
-            ctx.save(); ctx.shadowColor=`rgba(0,0,0,${state.settings.textShadow})`;
-            ctx.shadowBlur=12; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0; ctx.fillText(run.text,x,y); ctx.restore();
-          } else ctx.fillText(run.text,x,y);
+            ctx.save();
+            ctx.shadowColor=`rgba(0,0,0,${state.settings.textShadow})`;
+            ctx.shadowBlur=12; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;
+            ctx.fillText(run.text,x,y);
+            ctx.restore();
+          }else{
+            ctx.fillText(run.text,x,y);
+          }
           x+=run.w;
         }
       });
     }
 
-    function renderAll(){ document.querySelectorAll('canvas.thumb').forEach(cv=>renderSlideCanvas(cv, parseInt(cv.dataset.index,10))); }
-
-    function splitTextToSlides(t){
-      const parts=t.replace(/\\r/g,'').split(/\\n\\s*\\n/g).map(s=>s.trim()).filter(Boolean);
-      const old=state.slides;
-      state.slides=parts.map((p,i)=>({text:p, imgSrc:(old[i]&&old[i].imgSrc)||undefined, _img:null}));
-      renderSlidesList(); renderAll();
-    }
-    elStory.addEventListener('input', ()=>{ splitTextToSlides(elStory.value); });
-
-    function createSlideCard(index){
-      const wrap=document.createElement('div'); wrap.className='slideCard';
-      const c=document.createElement('canvas'); c.width=W; c.height=H; c.className='thumb'; c.dataset.index=index; wrap.appendChild(c);
-      const actions=document.createElement('div'); actions.className='cardActions';
-      const replaceBtn=document.createElement('button'); replaceBtn.className='btn secondary'; replaceBtn.textContent='Replace photo';
-      replaceBtn.addEventListener('click',()=>replacePhoto(index)); actions.appendChild(replaceBtn);
-      const dlBtn=document.createElement('button'); dlBtn.className='btn secondary iconBtn'; dlBtn.title='Download JPG';
-      dlBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3a1 1 0 011 1v9.586l2.293-2.293a1 1 0 111.414 1.414l-4.001 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L11 13.586V4a1 1 0 011-1z"/><path d="M5 20a2 2 0 002 2h10a2 2 0 002-2v-3a1 1 0 10-2 0v3H7v-3a1 1 0 10-2 0v3z"/></svg>`;
-      dlBtn.addEventListener('click',()=>downloadSlide(index)); actions.appendChild(dlBtn);
-      wrap.appendChild(actions);
-      renderSlideCanvas(c,index); return wrap;
-    }
-
-    function renderSlidesList(){
-      elSlides.innerHTML='';
-      state.slides.forEach((_,i)=>elSlides.appendChild(createSlideCard(i)));
-      if(state.slides.length===0){
-        const empty=document.createElement('div'); empty.className='hint';
-        empty.textContent='Type your story — slides appear automatically.'; elSlides.appendChild(empty);
-      }
-    }
-
     function replacePhoto(index){
-      elFile.onchange=async (e)=>{
-        const f=e.target.files && e.target.files[0]; if(!f) return;
-        const fr=new FileReader();
-        fr.onload=()=>{ state.slides[index].imgSrc=fr.result; state.slides[index]._img=null; renderAll(); elFile.value=''; };
-        fr.readAsDataURL(f);
+      elFile.onchange=async(e)=>{const f=e.target.files&&e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{state.slides[index].imgSrc=fr.result;state.slides[index]._img=null;renderAll();elFile.value=''};fr.readAsDataURL(f)};elFile.click()
+    }
+
+    function downloadSlide(index){const cv=document.querySelectorAll('canvas.thumb')[index];renderSlideCanvas(cv,index);const a=document.createElement('a');a.href=cv.toDataURL('image/jpeg',0.92);a.download=`slide-${index+1}.jpg`;document.body.appendChild(a);a.click();a.remove()}
+
+    // CLEAR — полная очистка
+    document.getElementById('clearBtn').addEventListener('click',()=>{
+      if(!confirm('Действительно очистить все данные?')) return;
+      state.slides=[];
+      elStory.value='';
+      state.settings={
+        fontFamily:'Arial, sans-serif',
+        fontSize:40,
+        textAlign:'left',
+        padding:64,
+        lineHeight:1.25,
+        textColor:'#ffffff',
+        textShadow:0.8,
+        textBottomOffset:130,
+        overlayHeightPct:60,
+        overlayAlpha:1,
+        cornerRadius:0
       };
-      elFile.click();
-    }
+      ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','textShadow','textBottomOffset','overlayHeightPct','overlayAlpha','cornerRadius']
+        .forEach(id=>{const el=document.getElementById(id);if(el)el.value=state.settings[id];});
+      renderSlidesList();
+    });
 
-    function downloadSlide(index){
-      const cv=document.querySelectorAll('canvas.thumb')[index];
-      renderSlideCanvas(cv,index);
-      const a=document.createElement('a');
-      a.href=cv.toDataURL('image/jpeg',0.92);
-      a.download=`slide-${index+1}.jpg`;
-      document.body.appendChild(a); a.click(); a.remove();
-    }
+    // Автоприменение всех настроек
+    ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','textShadow','textBottomOffset','overlayHeightPct','overlayAlpha','cornerRadius']
+      .forEach(id=>{
+        const el=document.getElementById(id); if(!el) return;
+        el.addEventListener('input', ()=>{
+          const v=(el.type==='number')?parseFloat(el.value):el.value;
+          state.settings[id]=isNaN(v)?el.value:v;
+          renderAll();
+        });
+      });
 
-    // init
-    renderSlidesList(); renderAll();
-    if(elStory.value) splitTextToSlides(elStory.value);
+    renderSlidesList();
   </script>
 </body>
 </html>
