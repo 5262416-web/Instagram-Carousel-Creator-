@@ -95,7 +95,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         </div>
       </details>
 
-      <div class="hint" style="margin:12px 0 8px">Long press a slide to download JPG • Drag photo to reposition • Use “Replace photo” below each slide</div>
+      <div class="hint" style="margin:12px 0 8px">Long press a slide to download JPG • Use “Replace photo” below each slide</div>
       <div id="slides" class="slides"></div>
     </div>
   </main>
@@ -123,7 +123,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         cornerRadius: 0,
         textShadow: 0.8,
         showArrow: false,
-        bgColor: '#000000',    // NEW: background color under photo
+        bgColor: '#000000'
       },
       autosaveTS: 0
     };
@@ -158,26 +158,33 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     bindSetting('showArrow','showArrow', v=>v==='on' ? true : document.getElementById('showArrow').checked);
     bindSetting('bgColor','bgColor');
 
-    // split text → slides
+    // text -> slides
     function splitTextToSlides(t){
       const parts = t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
       const old = state.slides;
       state.slides = parts.map((p,i)=>({
         text: p,
-        imgSrc: (old[i] && old[i].imgSrc) || undefined,
-        offset: (old[i] && old[i].offset) || {x:0,y:0}
+        imgSrc: (old[i] && old[i].imgSrc) || undefined
       }));
       renderSlidesList(); renderAll();
     }
     elStory.addEventListener('input', ()=>{ splitTextToSlides(elStory.value); queueAutosave(); });
 
-    // UI build
+    // build UI
     function createSlideCard(index){
       const wrap = document.createElement('div'); wrap.className = 'slideCard';
       const c = document.createElement('canvas'); c.width = W; c.height = H; c.className='thumb'; c.dataset.index = index;
-      attachCanvasHandlers(c, index); wrap.appendChild(c);
+      // long-press to download (no dragging)
+      let timer=null;
+      c.addEventListener('touchstart', (e)=>{ e.preventDefault(); timer=setTimeout(()=>downloadSlide(index),650); }, {passive:false});
+      c.addEventListener('touchend',   (e)=>{ e.preventDefault(); clearTimeout(timer); }, {passive:false});
+      c.addEventListener('mousedown',  ()=>{ timer=setTimeout(()=>downloadSlide(index),650); });
+      c.addEventListener('mouseup',    ()=>{ clearTimeout(timer); });
+      wrap.appendChild(c);
+
       const replaceBtn = document.createElement('button'); replaceBtn.className='btn secondary'; replaceBtn.textContent='Replace photo';
       replaceBtn.addEventListener('click',(e)=>{ e.stopPropagation(); replacePhoto(index); }); wrap.appendChild(replaceBtn);
+
       renderSlideCanvas(c, index); return wrap;
     }
     function renderSlidesList(){
@@ -205,7 +212,6 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     }
     function endClip(ctx, clipped){ if(clipped){ ctx.restore(); } }
 
-    // gradient from bottom (opaque*alpha) to transparent upwards
     function drawGradientBackdrop(ctx, x, y, w, h, alphaBottom){
       const g = ctx.createLinearGradient(0, y+h, 0, y);
       g.addColorStop(0, `rgba(0,0,0,${alphaBottom})`);
@@ -213,122 +219,113 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
     }
 
+    // main renderer (what-you-see-is-what-you-download)
     function renderSlideCanvas(cv, index){
       const s = state.slides[index];
       const ctx = cv.getContext('2d');
 
-      // background under photo (customizable)
+      // background (under photo)
       ctx.fillStyle = state.settings.bgColor || '#000';
       ctx.fillRect(0,0,W,H);
 
       const clipped = roundedClip(ctx,0,0,W,H,state.settings.cornerRadius);
 
-      // compute overlay rect once (used after image, before text)
-      const overlayH = Math.round(H * (state.settings.overlayHeightPct/100));
-      const baseY = H - overlayH - state.settings.bottomOffset;
-
-      // draw image (cover fit) with optional offset for drag
+      // image: cover fit, centered (no offset/drag)
       if(s.imgSrc){
         const img = new Image();
         img.onload = ()=>{
           const rImg = img.width / img.height, rCan = W / H;
           let dw=W, dh=H;
           if(rImg > rCan){ dh = W / rImg; dw = W; } else { dw = H * rImg; dh = H; }
-          const cx = (W - dw)/2 + (s.offset?.x||0);
-          const cy = (H - dh)/2 + (s.offset?.y||0);
+          const cx = (W - dw)/2;
+          const cy = (H - dh)/2;
           ctx.drawImage(img, cx, cy, dw, dh);
-
-          // 1) gradient shadow ON TOP of photo
-          drawGradientBackdrop(ctx, 0, baseY, W, overlayH, state.settings.overlayAlpha);
-
-          // 2) text on top of gradient
-          drawText(ctx, s.text, baseY, overlayH);
-
-          if(state.settings.showArrow && index < state.slides.length-1){ drawSwipeArrow(ctx); }
+          drawOverlayAndText(ctx, s.text, index);
           endClip(ctx, clipped);
         };
         img.src = s.imgSrc;
       } else {
-        // no photo: still show gradient + text over background color
-        drawGradientBackdrop(ctx, 0, baseY, W, overlayH, state.settings.overlayAlpha);
-        drawText(ctx, s.text, baseY, overlayH);
-        if(state.settings.showArrow && index < state.slides.length-1){ drawSwipeArrow(ctx); }
+        drawOverlayAndText(ctx, s.text, index);
         endClip(ctx, clipped);
       }
+    }
 
-      function drawText(ctx, text, baseY, overlayH){
-        const fs = state.settings.fontSize;
-        const lh = Math.max(1, state.settings.lineHeight) * fs;
-        ctx.font = `${fs}px ${state.settings.fontFamily}`;
-        ctx.textAlign = state.settings.textAlign;
-        const pad = state.settings.padding;
-        const maxW = W - pad*2;
+    function drawOverlayAndText(ctx, text, index){
+      // shadow (over photo/bg, under text)
+      const overlayH = Math.round(H * (state.settings.overlayHeightPct/100));
+      const baseY = H - overlayH - state.settings.bottomOffset;
+      drawGradientBackdrop(ctx, 0, baseY, W, overlayH, state.settings.overlayAlpha);
 
-        const words = (text||'').split(/\s+/);
-        const lines = []; let line = '';
-        for(const w of words){
-          const test = line ? line + ' ' + w : w;
-          if(ctx.measureText(test).width > maxW && line){ lines.push(line); line = w; }
-          else { line = test; }
-        }
-        if(line) lines.push(line);
+      // text
+      const fs = state.settings.fontSize;
+      const lh = Math.max(1, state.settings.lineHeight) * fs;
+      ctx.font = `${fs}px ${state.settings.fontFamily}`;
+      ctx.textAlign = state.settings.textAlign;
+      const pad = state.settings.padding;
+      const maxW = W - pad*2;
 
-        const x = (state.settings.textAlign==='left') ? pad : (state.settings.textAlign==='center' ? W/2 : W - pad);
-        let y = baseY + pad + fs;
-        ctx.fillStyle = state.settings.textColor;
+      const words = (text||'').split(/\s+/);
+      const lines = []; let line = '';
+      for(const w of words){
+        const test = line ? line + ' ' + w : w;
+        if(ctx.measureText(test).width > maxW && line){ lines.push(line); line = w; }
+        else { line = test; }
+      }
+      if(line) lines.push(line);
 
-        if(state.settings.textShadow>0){
-          ctx.save();
-          ctx.shadowColor = `rgba(0,0,0,${state.settings.textShadow})`;
-          ctx.shadowBlur = 12; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-          for(const ln of lines){ ctx.fillText(ln, x, y); y += lh; if(y > baseY + overlayH - pad) break; }
-          ctx.restore();
-        } else {
-          for(const ln of lines){ ctx.fillText(ln, x, y); y += lh; if(y > baseY + overlayH - pad) break; }
-        }
+      const x = (state.settings.textAlign==='left') ? pad : (state.settings.textAlign==='center' ? W/2 : W - pad);
+      let y = baseY + pad + fs;
+      ctx.fillStyle = state.settings.textColor;
+
+      if(state.settings.textShadow>0){
+        ctx.save();
+        ctx.shadowColor = `rgba(0,0,0,${state.settings.textShadow})`;
+        ctx.shadowBlur = 12; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+        for(const ln of lines){ ctx.fillText(ln, x, y); y += lh; if(y > baseY + overlayH - pad) break; }
+        ctx.restore();
+      } else {
+        for(const ln of lines){ ctx.fillText(ln, x, y); y += lh; if(y > baseY + overlayH - pad) break; }
       }
 
-      function drawSwipeArrow(ctx){
+      // optional arrow
+      if(state.settings.showArrow && index < state.slides.length-1){
         ctx.save(); ctx.globalAlpha = 0.75; ctx.fillStyle = '#ffffff';
-        const size = 36, cx = W - 24, cy = H/2;
-        ctx.beginPath(); ctx.moveTo(cx - size/2, cy - size/2);
-        ctx.lineTo(cx + size/2, cy); ctx.lineTo(cx - size/2, cy + size/2);
+        const size = 36, ax = W - 24, ay = H/2;
+        ctx.beginPath(); ctx.moveTo(ax - size/2, ay - size/2);
+        ctx.lineTo(ax + size/2, ay); ctx.lineTo(ax - size/2, ay + size/2);
         ctx.closePath(); ctx.fill(); ctx.restore();
       }
     }
 
-    // interactions (drag image, long-press download)
-    function attachCanvasHandlers(cv, index){
-      let timer=null, isDragging=false, last={x:0,y:0};
-      const start=(e)=>{ e.preventDefault(); isDragging=false; last=getPoint(e,cv); timer=setTimeout(()=>{ if(!isDragging){ downloadSlide(index); }},650); };
-      const move=(e)=>{ const s=state.slides[index]; if(!s.imgSrc) return; const pt=getPoint(e,cv);
-        if(Math.hypot(pt.x-last.x,pt.y-last.y)>2){ isDragging=true; clearTimeout(timer);
-          s.offset=s.offset||{x:0,y:0}; s.offset.x+=pt.x-last.x; s.offset.y+=pt.y-last.y; last=pt; renderSlideCanvas(cv,index); queueAutosave(); } };
-      const end=(e)=>{ e.preventDefault(); clearTimeout(timer); };
-      cv.addEventListener('touchstart', start, {passive:false});
-      cv.addEventListener('touchmove',  move,  {passive:false});
-      cv.addEventListener('touchend',   end,   {passive:false});
-      cv.addEventListener('mousedown', start); cv.addEventListener('mousemove', move); cv.addEventListener('mouseup', end);
-    }
-    function getPoint(e, el){ if(e.touches&&e.touches[0]){const t=e.touches[0]; const r=el.getBoundingClientRect(); return {x:t.clientX-r.left, y:t.clientY-r.top};}
-      const r=el.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
-
+    // replace photo
     function replacePhoto(index){
-      elFile.onchange = async (e)=>{ const file=e.target.files&&e.target.files[0]; if(!file) return;
-        const dataURL=await fileToDataURL(file); state.slides[index].imgSrc=dataURL; state.slides[index].offset={x:0,y:0};
-        renderAll(); queueAutosave(); elFile.value=''; };
+      elFile.onchange = async (e)=>{
+        const file = e.target.files && e.target.files[0];
+        if(!file) return;
+        const dataURL = await fileToDataURL(file);
+        state.slides[index].imgSrc = dataURL;
+        renderAll(); queueAutosave(); elFile.value='';
+      };
       elFile.click();
     }
     function fileToDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); }); }
-    function downloadSlide(index){ const off=document.createElement('canvas'); off.width=W; off.height=H; renderSlideCanvas(off,index);
-      const a=document.createElement('a'); a.href=off.toDataURL('image/jpeg',0.92); a.download=`slide-${index+1}.jpg`; document.body.appendChild(a); a.click(); a.remove(); }
+
+    // download = render offscreen and save
+    function downloadSlide(index){
+      const off = document.createElement('canvas'); off.width=W; off.height=H;
+      renderSlideCanvas(off, index);
+      const a = document.createElement('a'); a.href = off.toDataURL('image/jpeg', 0.92); a.download = `slide-${index+1}.jpg`;
+      document.body.appendChild(a); a.click(); a.remove();
+    }
 
     // autosave
-    const SAVE_KEY='icc_session_v7';
+    const SAVE_KEY='icc_session_v8';
     function queueAutosave(){ state.autosaveTS=Date.now(); }
     setInterval(()=>{ if(!state.autosaveTS) return;
-      if(Date.now()-state.autosaveTS>=2900){ try{ const payload={slides:state.slides,settings:state.settings,story:elStory.value};
-        sessionStorage.setItem(SAVE_KEY, JSON.stringify(payload)); state.autosaveTS=0; }catch(e){} } },1000);
+      if(Date.now()-state.autosaveTS>=2900){ try{
+        const payload={slides:state.slides,settings:state.settings,story:elStory.value};
+        sessionStorage.setItem(SAVE_KEY, JSON.stringify(payload)); state.autosaveTS=0;
+      }catch(e){} } },1000);
 
     function restore(){
       try{
@@ -336,7 +333,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         Object.assign(state.settings, data.settings||{});
         ['fontFamily','textAlign','fontSize','lineHeight','padding','overlayHeightPct','overlayAlpha','cornerRadius','textColor','textShadow','bottomOffset','showArrow','bgColor']
           .forEach(id=>{ const el=document.getElementById(id); if(!el) return; if(el.type==='checkbox'){ el.checked=!!state.settings[id]; } else { el.value=state.settings[id]; } });
-        state.slides=(data.slides||[]).map(s=>({text:s.text||'', imgSrc:s.imgSrc, offset:s.offset||{x:0,y:0}}));
+        state.slides=(data.slides||[]).map(s=>({text:s.text||'', imgSrc:s.imgSrc}));
         elStory.value=data.story||'';
       }catch(e){}
     }
@@ -358,4 +355,4 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     restore(); renderSlidesList(); renderAll(); if(elStory.value) splitTextToSlides(elStory.value);
   </script>
 </body>
-</html>
+                                                         </html>
