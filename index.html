@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="ru">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
@@ -14,7 +15,7 @@
     .row{display:flex;gap:12px;flex-wrap:wrap}
     .col{flex:1 1 320px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
     label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-    textarea{width:100%;min-height:120px;resize:vertical;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;line-height:1.5}
+    textarea{width:100%;min-height:140px;resize:vertical;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;line-height:1.5}
     select,input[type="number"],input[type="range"],input[type="text"]{width:100%;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px}
     .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .btn{appearance:none;border:1px solid var(--line);background:var(--btn);color:var(--ink);padding:10px 12px;border-radius:12px;font-weight:600}
@@ -22,123 +23,130 @@
     .btn.warn{background:#2b0f13;border-color:#3a1218;color:#ffb4b4}
     .hint{color:var(--muted);font-size:12px}
     details{background:#0a0c12;border:1px solid var(--line);border-radius:12px;padding:10px}
-    summary{cursor:pointer;color:var(--ink);font-weight:600}/* Slides strip */
-.slides{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}
-.slideCard{min-width:180px;background:#0b0e15;border:1px solid var(--line);border-radius:14px;padding:8px}
-.slideHead{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
-canvas.thumb{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#000}
+    summary{cursor:pointer;color:var(--ink);font-weight:600}
 
-.toolbar{display:flex;gap:8px;flex-wrap:wrap}
-.pill{font-size:12px;border:1px solid var(--line);background:#0a0c12;padding:6px 8px;border-radius:999px}
+    /* Slides strip */
+    .slides{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}
+    .slideCard{position:relative;min-width:220px;background:#0b0e15;border:1px solid var(--line);border-radius:14px;padding:8px}
+    .slideHead{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+    canvas.thumb{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#000;touch-action:none}
+    .replaceBtn{position:absolute;top:14px;right:14px;z-index:3;display:none}
+    .slideCard.hasImg .replaceBtn{display:inline-flex}
 
-footer{display:flex;justify-content:center;padding:24px}
-.clear{opacity:.8}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+    .pill{font-size:12px;border:1px solid var(--line);background:#0a0c12;padding:6px 8px;border-radius:999px}
 
-.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;background:#101522;border:1px solid var(--line);font-size:12px;color:var(--muted)}
-.accent{color:var(--accent)}
+    footer{display:flex;justify-content:center;padding:24px}
+    .clear{opacity:.8}
 
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;background:#101522;border:1px solid var(--line);font-size:12px;color:var(--muted)}
+    .accent{color:var(--accent)}
   </style>
 </head>
 <body>
   <header>
     <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:10px;flex:1 1 auto">
-        <div class="badge">📸 Instagram Carousel Creator <span class="accent">1080×1320</span></div>
+        <div class="badge">📸 Instagram Carousel Creator <span class="accent">1320×1080</span></div>
       </div>
-      <button id="addSlideBtn" class="btn">+ Слайд</button>
+      <button id="addSlideBtn" class="btn">+ Slide</button>
     </div>
-  </header>  <main class="wrap">
+  </header>
+
+  <main class="wrap">
     <div class="row">
       <div class="col" style="flex:1 1 380px">
-        <label for="story">История (разделяйте слайды пустой строкой)</label>
-        <textarea id="story" placeholder="Вставьте текст истории.\n\nКаждый абзац, отделённый пустой строкой, станет отдельным слайдом."></textarea>
+        <label for="story">Story (separate slides with an empty line)</label>
+        <textarea id="story" placeholder="Paste your story here.
+
+Each paragraph separated by an empty line becomes a new slide."></textarea>
         <div class="toolbar" style="margin-top:10px">
-          <button id="splitBtn" class="btn">↔️ Разбить по абзацам</button>
-          <button id="genSlidesBtn" class="btn secondary">🔁 Обновить слайды из текста</button>
-          <span class="hint">Автосохранение каждые ~3 секунды (текущая сессия)</span>
-        </div><details style="margin-top:12px">
-      <summary>Доп. настройки текста и наложения</summary>
-      <div class="controls" style="margin-top:10px">
-        <div>
-          <label>Шрифт</label>
-          <select id="fontFamily">
-            <option value="Arial, sans-serif">Arial</option>
-            <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
-            <option value="'Times New Roman', Times, serif">Times New Roman</option>
-            <option value="Georgia, serif">Georgia</option>
-            <option value="'Courier New', Courier, monospace">Courier New</option>
-          </select>
+          <span class="pill">Auto-save every ~3s (this session)</span>
         </div>
-        <div>
-          <label>Размер шрифта (px) — по умолчанию 16</label>
-          <input id="fontSize" type="number" min="12" max="96" step="1" value="16" />
-        </div>
-        <div>
-          <label>Положение текста</label>
-          <select id="textPosition">
-            <option value="bottom">Снизу</option>
-            <option value="center">По центру</option>
-            <option value="top">Сверху</option>
-          </select>
-        </div>
-        <div>
-          <label>Выравнивание</label>
-          <select id="textAlign">
-            <option value="left">Слева</option>
-            <option value="center">По центру</option>
-            <option value="right">Справа</option>
-          </select>
-        </div>
-        <div>
-          <label>Отступы текста (px)</label>
-          <input id="padding" type="number" min="0" max="120" value="24" />
-        </div>
-        <div>
-          <label>Межстрочный интервал</label>
-          <input id="lineHeight" type="number" min="1" max="2.4" step="0.1" value="1.4" />
-        </div>
-        <div>
-          <label>Цвет текста</label>
-          <input id="textColor" type="text" value="#ffffff" />
-        </div>
-        <div>
-          <label>Непрозр. подложки (0–1)</label>
-          <input id="overlayAlpha" type="number" min="0" max="1" step="0.05" value="0.35" />
-        </div>
-        <div>
-          <label>Высота подложки (%)</label>
-          <input id="overlayHeightPct" type="number" min="15" max="90" value="42" />
-        </div>
+
+        <details style="margin-top:12px">
+          <summary>Text & overlay settings</summary>
+          <div class="controls" style="margin-top:10px">
+            <div>
+              <label>Font family</label>
+              <select id="fontFamily">
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
+                <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="'Courier New', Courier, monospace">Courier New</option>
+              </select>
+            </div>
+            <div>
+              <label>Font size (px) — default 16</label>
+              <input id="fontSize" type="number" min="12" max="96" step="1" value="16" />
+            </div>
+            <div>
+              <label>Text alignment</label>
+              <select id="textAlign">
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+            <div>
+              <label>Text padding (px)</label>
+              <input id="padding" type="number" min="0" max="120" value="24" />
+            </div>
+            <div>
+              <label>Line height</label>
+              <input id="lineHeight" type="number" min="1" max="2.4" step="0.1" value="1.4" />
+            </div>
+            <div>
+              <label>Text color</label>
+              <input id="textColor" type="text" value="#ffffff" />
+            </div>
+            <div>
+              <label>Overlay darkness (0–1)</label>
+              <input id="overlayAlpha" type="number" min="0" max="1" step="0.05" value="0.35" />
+            </div>
+            <div>
+              <label>Overlay height (%)</label>
+              <input id="overlayHeightPct" type="number" min="15" max="90" value="42" />
+            </div>
+            <div>
+              <label>Bottom offset (px)</label>
+              <input id="bottomOffset" type="number" min="0" max="200" value="0" />
+            </div>
+          </div>
+        </details>
       </div>
-    </details>
-  </div>
 
-  <div class="col" style="flex:1 1 420px">
-    <div class="slideHead"><span>Слайды</span>
-      <div class="pill">Долгое нажатие — скачать • Короткое — заменить/удалить фото</div>
+      <div class="col" style="flex:1 1 420px">
+        <div class="slideHead"><span>Slides</span>
+          <div class="pill">Long press — download • Tap ✖ to replace photo • Drag photo to reposition</div>
+        </div>
+        <div id="slides" class="slides"></div>
+      </div>
     </div>
-    <div id="slides" class="slides"></div>
-  </div>
-</div>
+  </main>
 
-  </main>  <footer>
-    <button id="clearBtn" class="btn warn clear">Clear Results — сбросить всё (текст, фото, настройки)</button>
-  </footer>  <input id="filePicker" type="file" accept="image/*" style="display:none" />  <script>
+  <footer>
+    <button id="clearBtn" class="btn warn clear">Clear Results — reset all (text, photos, settings)</button>
+  </footer>
+
+  <input id="filePicker" type="file" accept="image/*" style="display:none" />
+
+  <script>
     // --- App State ---
-    const W = 1080, H = 1320; // Instagram 3:4
+    const W = 1320, H = 1080; // Instagram 4:3 landscape
     const state = {
-      slides: [], // { text: string, imgSrc?: dataURL }
-      currentTouchedSlide: null,
+      slides: [], // { text: string, imgSrc?: dataURL, offset:{x,y} }
       settings: {
         fontFamily: 'Arial, sans-serif',
         fontSize: 16,
-        textPosition: 'bottom',
         textAlign: 'left',
         padding: 24,
         lineHeight: 1.4,
         textColor: '#ffffff',
         overlayAlpha: 0.35,
         overlayHeightPct: 42,
+        bottomOffset: 0,
       },
       autosaveTS: 0
     };
@@ -156,37 +164,27 @@ footer{display:flex;justify-content:center;padding:24px}
 
     bindSetting('fontFamily','fontFamily');
     bindSetting('fontSize','fontSize', v=>parseInt(v,10));
-    bindSetting('textPosition','textPosition');
     bindSetting('textAlign','textAlign');
     bindSetting('padding','padding', v=>parseInt(v,10));
     bindSetting('lineHeight','lineHeight', v=>parseFloat(v));
     bindSetting('textColor','textColor');
     bindSetting('overlayAlpha','overlayAlpha', v=>parseFloat(v));
     bindSetting('overlayHeightPct','overlayHeightPct', v=>parseInt(v,10));
+    bindSetting('bottomOffset','bottomOffset', v=>parseInt(v,10));
 
-    // --- Text to slides ---
+    // --- Text to slides (auto on input) ---
     function splitTextToSlides(t){
       const parts = t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
-      if(parts.length===0){ state.slides = []; return; }
       const old = state.slides;
-      state.slides = parts.map((p,i)=>({ text: p, imgSrc: (old[i] && old[i].imgSrc) || undefined }));
-    }
-
-    document.getElementById('splitBtn').addEventListener('click', ()=>{
-      splitTextToSlides(elStory.value);
-      renderSlidesList();
-      queueAutosave();
-    });
-
-    document.getElementById('genSlidesBtn').addEventListener('click', ()=>{
-      splitTextToSlides(elStory.value);
+      state.slides = parts.map((p,i)=>({ text: p, imgSrc: (old[i] && old[i].imgSrc) || undefined, offset: (old[i] && old[i].offset) || {x:0,y:0} }));
       renderSlidesList();
       renderAll();
-      queueAutosave();
-    });
+    }
+
+    elStory.addEventListener('input', ()=>{ splitTextToSlides(elStory.value); queueAutosave(); });
 
     document.getElementById('addSlideBtn').addEventListener('click', ()=>{
-      state.slides.push({text: 'Новый слайд', imgSrc: undefined});
+      state.slides.push({text: 'New slide', imgSrc: undefined, offset:{x:0,y:0}});
       renderSlidesList();
       renderAll();
       queueAutosave();
@@ -194,27 +192,34 @@ footer{display:flex;justify-content:center;padding:24px}
 
     // --- Rendering ---
     function createSlideCard(index){
+      const s = state.slides[index];
       const wrap = document.createElement('div');
-      wrap.className = 'slideCard';
+      wrap.className = 'slideCard' + (s.imgSrc ? ' hasImg' : '');
 
       const head = document.createElement('div');
       head.className='slideHead';
-      head.innerHTML = `<span>#${index+1}</span><button class="btn secondary" data-edit-text>Текст</button>`;
+      head.innerHTML = `<span>#${index+1}</span><button class="btn secondary" data-edit-text>Text</button>`;
       wrap.appendChild(head);
+
+      const replace = document.createElement('button');
+      replace.className='btn secondary replaceBtn';
+      replace.textContent='✖';
+      replace.title='Replace photo';
+      replace.addEventListener('click', (e)=>{ e.stopPropagation(); replacePhoto(index); });
+      wrap.appendChild(replace);
 
       const c = document.createElement('canvas');
       c.width = W; c.height = H; c.className='thumb';
       c.dataset.index = index;
-      attachTouchHandlers(c, index);
+      attachCanvasHandlers(c, index);
       wrap.appendChild(c);
 
       // edit text
       head.querySelector('[data-edit-text]').addEventListener('click', ()=>{
-        const newText = prompt('Изменить текст слайда', state.slides[index].text || '');
+        const newText = prompt('Edit slide text', state.slides[index].text || '');
         if(newText!==null){ state.slides[index].text = newText; renderSlideCanvas(c, index); queueAutosave(); }
       });
 
-      // initial draw
       renderSlideCanvas(c, index);
       return wrap;
     }
@@ -227,7 +232,7 @@ footer{display:flex;justify-content:center;padding:24px}
       if(state.slides.length===0){
         const empty = document.createElement('div');
         empty.className='hint';
-        empty.textContent = 'Пока нет слайдов. Вставьте текст и нажмите «Разбить по абзацам», либо добавьте слайды вручную.';
+        empty.textContent = 'No slides yet. Type your story — slides appear automatically.';
         elSlides.appendChild(empty);
       }
     }
@@ -236,25 +241,9 @@ footer{display:flex;justify-content:center;padding:24px}
       document.querySelectorAll('canvas.thumb').forEach(cv=>{
         const idx = parseInt(cv.dataset.index,10);
         renderSlideCanvas(cv, idx);
+        const card = cv.parentElement; if(!card) return;
+        if(state.slides[idx].imgSrc) card.classList.add('hasImg'); else card.classList.remove('hasImg');
       });
-    }
-
-    function measureMultiline(ctx, text, maxWidth, lineHeight){
-      const words = text.split(/\s+/);
-      const lines = [];
-      let line = '';
-      for(const w of words){
-        const test = line ? line + ' ' + w : w;
-        const m = ctx.measureText(test);
-        if(m.width > maxWidth && line){
-          lines.push(line);
-          line = w;
-        } else {
-          line = test;
-        }
-      }
-      if(line) lines.push(line);
-      return {lines, height: lines.length * lineHeight};
     }
 
     function renderSlideCanvas(cv, index){
@@ -263,17 +252,15 @@ footer{display:flex;justify-content:center;padding:24px}
       ctx.fillStyle = '#000';
       ctx.fillRect(0,0,W,H);
 
-      const drawText = ()=>{
+      const drawTextAtBottom = ()=>{
         ctx.save();
-        ctx.fillStyle = state.settings.textColor;
-        ctx.textAlign = state.settings.textAlign;
         const fs = state.settings.fontSize;
         const lh = Math.max(1, state.settings.lineHeight) * fs;
         ctx.font = `${fs}px ${state.settings.fontFamily}`;
+        ctx.textAlign = state.settings.textAlign;
         const pad = state.settings.padding;
         const maxW = W - pad*2;
 
-        // compute lines
         const words = (s.text||'').split(/\s+/);
         const lines = [];
         let line = '';
@@ -282,32 +269,24 @@ footer{display:flex;justify-content:center;padding:24px}
           if(ctx.measureText(test).width > maxW && line){
             lines.push(line);
             line = w;
-          } else {
-            line = test;
-          }
+          } else { line = test; }
         }
         if(line) lines.push(line);
 
-        // overlay position & height
         const overlayH = Math.round(H * (state.settings.overlayHeightPct/100));
-        let baseY = 0;
-        if(state.settings.textPosition==='bottom') baseY = H - overlayH;
-        else if(state.settings.textPosition==='center') baseY = (H - overlayH)/2;
-        else baseY = 0;
+        const baseY = H - overlayH - state.settings.bottomOffset;
 
-        // fade-out rectangle (semi-transparent)
         ctx.fillStyle = `rgba(0,0,0,${state.settings.overlayAlpha})`;
         ctx.fillRect(0, baseY, W, overlayH);
 
-        // text block
         const align = state.settings.textAlign;
         const x = align==='left' ? pad : (align==='center' ? W/2 : W - pad);
-        let y = baseY + pad + fs; // first baseline
+        let y = baseY + pad + fs;
         ctx.fillStyle = state.settings.textColor;
         for(const ln of lines){
           ctx.fillText(ln, x, y);
           y += lh;
-          if(y > baseY + overlayH - pad) break; // stop if overflow
+          if(y > baseY + overlayH - pad) break;
         }
         ctx.restore();
       };
@@ -315,108 +294,90 @@ footer{display:flex;justify-content:center;padding:24px}
       if(s.imgSrc){
         const img = new Image();
         img.onload = ()=>{
-          // cover fit
           const rImg = img.width / img.height, rCan = W / H;
-          let sx=0, sy=0, sw=img.width, sh=img.height;
-          if(rImg > rCan){
-            // wider than canvas -> crop sides
-            const targetW = img.height * rCan;
-            sx = (img.width - targetW)/2; sw = targetW;
-          } else {
-            // taller -> crop top/bottom
-            const targetH = img.width / rCan;
-            sy = (img.height - targetH)/2; sh = targetH;
-          }
-          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
-          drawText();
+          let dw=W, dh=H;
+          if(rImg > rCan){ dh = W / rImg; dw = W; }
+          else { dw = H * rImg; dh = H; }
+          const cx = (W - dw)/2 + (s.offset?.x||0);
+          const cy = (H - dh)/2 + (s.offset?.y||0);
+          ctx.drawImage(img, cx, cy, dw, dh);
+          drawTextAtBottom();
         };
         img.src = s.imgSrc;
       } else {
-        // no image: nice gradient placeholder
         const g = ctx.createLinearGradient(0,0,0,H);
-        g.addColorStop(0,'#1a2030');
-        g.addColorStop(1,'#0c1020');
+        g.addColorStop(0,'#1a2030'); g.addColorStop(1,'#0c1020');
         ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-        // camera glyph
-        ctx.fillStyle = '#253050';
-        ctx.fillRect(W/2-60,H/2-45,120,90);
-        ctx.beginPath(); ctx.arc(W/2, H/2, 26, 0, Math.PI*2); ctx.fillStyle='#1b2440'; ctx.fill();
         ctx.fillStyle='#6b7da6'; ctx.font='20px Arial'; ctx.textAlign='center';
-        ctx.fillText('Нажмите чтобы добавить фото', W/2, H/2+70);
-        drawText();
+        ctx.fillText('Tap ✖ to add a photo above', W/2, H/2+60);
+        drawTextAtBottom();
       }
     }
 
-    // --- Touch handlers (short tap = replace/delete, long press = download) ---
-    function attachTouchHandlers(cv, index){
-      let t0 = 0, longPressed = false, timer = null;
+    // --- Canvas interactions ---
+    function attachCanvasHandlers(cv, index){
+      let longPressed = false, timer=null, isDragging=false, last={x:0,y:0};
 
       const start = (e)=>{
         e.preventDefault();
-        longPressed = false; t0 = Date.now(); state.currentTouchedSlide = index;
-        timer = setTimeout(()=>{ longPressed = true; downloadSlide(index); }, 650);
+        const pt = getPoint(e, cv);
+        isDragging=false; longPressed=false; last=pt;
+        timer = setTimeout(()=>{ if(!isDragging){ longPressed=true; downloadSlide(index); } }, 650);
       };
-      const end = (e)=>{
-        e.preventDefault();
-        clearTimeout(timer);
-        if(!longPressed){
-          // short tap: replace / delete photo
-          shortTapReplace(index);
+      const move = (e)=>{
+        const s = state.slides[index]; if(!s.imgSrc) return;
+        const pt = getPoint(e, cv);
+        if(Math.hypot(pt.x-last.x, pt.y-last.y)>2){
+          isDragging=true;
+          clearTimeout(timer);
+          s.offset = s.offset || {x:0,y:0};
+          s.offset.x += pt.x - last.x; s.offset.y += pt.y - last.y;
+          last = pt;
+          renderSlideCanvas(cv, index);
+          queueAutosave();
         }
-        state.currentTouchedSlide = null;
       };
+      const end = (e)=>{ e.preventDefault(); clearTimeout(timer); };
 
       cv.addEventListener('touchstart', start, {passive:false});
+      cv.addEventListener('touchmove', move, {passive:false});
       cv.addEventListener('touchend', end, {passive:false});
       cv.addEventListener('mousedown', start);
+      cv.addEventListener('mousemove', move);
       cv.addEventListener('mouseup', end);
     }
 
-    function shortTapReplace(index){
-      const s = state.slides[index];
-      const hasImg = !!s.imgSrc;
-      if(hasImg){
-        const want = confirm('Удалить текущее фото и выбрать новое?');
-        if(!want) return;
-      }
-      // open picker
+    function getPoint(e, el){
+      if(e.touches && e.touches[0]){ const t=e.touches[0]; const r=el.getBoundingClientRect(); return {x:t.clientX-r.left, y:t.clientY-r.top}; }
+      const r=el.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top};
+    }
+
+    function replacePhoto(index){
       elFile.onchange = async (e)=>{
         const file = e.target.files && e.target.files[0];
         if(!file){ return; }
         const dataURL = await fileToDataURL(file);
         state.slides[index].imgSrc = dataURL;
-        renderAll();
-        queueAutosave();
-        elFile.value = '';
+        state.slides[index].offset = {x:0,y:0};
+        renderAll(); queueAutosave(); elFile.value='';
       };
       elFile.click();
-      if(hasImg){ state.slides[index].imgSrc = undefined; renderAll(); queueAutosave(); }
     }
 
     function fileToDataURL(file){
-      return new Promise((res,rej)=>{
-        const fr = new FileReader();
-        fr.onload = ()=>res(fr.result);
-        fr.onerror = rej; fr.readAsDataURL(file);
-      });
+      return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); });
     }
 
     function downloadSlide(index){
-      // render to offscreen full-res canvas and download
-      const off = document.createElement('canvas');
-      off.width=W; off.height=H;
+      const off = document.createElement('canvas'); off.width=W; off.height=H;
       renderSlideCanvas(off, index);
-      const a = document.createElement('a');
-      a.href = off.toDataURL('image/jpeg', 0.92);
-      a.download = `slide-${index+1}.jpg`;
+      const a = document.createElement('a'); a.href = off.toDataURL('image/jpeg', 0.92); a.download = `slide-${index+1}.jpg`;
       document.body.appendChild(a); a.click(); a.remove();
     }
 
     // --- Autosave in sessionStorage ---
-    const SAVE_KEY = 'icc_session_v1';
-    function queueAutosave(){
-      state.autosaveTS = Date.now();
-    }
+    const SAVE_KEY = 'icc_session_v2';
+    function queueAutosave(){ state.autosaveTS = Date.now(); }
     setInterval(()=>{
       if(!state.autosaveTS) return;
       if(Date.now() - state.autosaveTS >= 2900){
@@ -424,585 +385,50 @@ footer{display:flex;justify-content:center;padding:24px}
           const payload = { slides: state.slides, settings: state.settings, story: elStory.value };
           sessionStorage.setItem(SAVE_KEY, JSON.stringify(payload));
           state.autosaveTS = 0;
-        } catch(e){ /* ignore quota */ }
+        } catch(e){}
       }
     }, 1000);
 
     function restore(){
       try{
-        const raw = sessionStorage.getItem(SAVE_KEY);
-        if(!raw) return;
-        const data = JSON.parse(raw);
+        const raw = sessionStorage.getItem(SAVE_KEY); if(!raw) return; const data = JSON.parse(raw);
         Object.assign(state.settings, data.settings||{});
-        document.getElementById('fontFamily').value = state.settings.fontFamily;
-        document.getElementById('fontSize').value = state.settings.fontSize;
-        document.getElementById('textPosition').value = state.settings.textPosition;
-        document.getElementById('textAlign').value = state.settings.textAlign;
-        document.getElementById('padding').value = state.settings.padding;
-        document.getElementById('lineHeight').value = state.settings.lineHeight;
-        document.getElementById('textColor').value = state.settings.textColor;
-        document.getElementById('overlayAlpha').value = state.settings.overlayAlpha;
-        document.getElementById('overlayHeightPct').value = state.settings.overlayHeightPct;
-        state.slides = data.slides || [];
+        ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','overlayAlpha','overlayHeightPct','bottomOffset'].forEach(id=>{
+          if(document.getElementById(id)) document.getElementById(id).value = state.settings[id];
+        });
+        state.slides = (data.slides||[]).map(s=>({text:s.text||'', imgSrc:s.imgSrc, offset:s.offset||{x:0,y:0}}));
         elStory.value = data.story || '';
-      }catch(e){/* ignore */}
+      }catch(e){}
     }
 
     // --- Clear (reset to defaults) ---
     document.getElementById('clearBtn').addEventListener('click', ()=>{
-      if(!confirm('Очистить всё и вернуть настройки по умолчанию?')) return;
+      if(!confirm('Reset everything to defaults?')) return;
       state.slides = [];
       elStory.value = '';
       Object.assign(state.settings, {
         fontFamily: 'Arial, sans-serif',
         fontSize: 16,
-        textPosition: 'bottom',
         textAlign: 'left',
         padding: 24,
         lineHeight: 1.4,
         textColor: '#ffffff',
         overlayAlpha: 0.35,
         overlayHeightPct: 42,
+        bottomOffset: 0,
       });
-      // reflect UI
-      document.getElementById('fontFamily').value = state.settings.fontFamily;
-      document.getElementById('fontSize').value = state.settings.fontSize;
-      document.getElementById('textPosition').value = state.settings.textPosition;
-      document.getElementById('textAlign').value = state.settings.textAlign;
-      document.getElementById('padding').value = state.settings.padding;
-      document.getElementById('lineHeight').value = state.settings.lineHeight;
-      document.getElementById('textColor').value = state.settings.textColor;
-      document.getElementById('overlayAlpha').value = state.settings.overlayAlpha;
-      document.getElementById('overlayHeightPct').value = state.settings.overlayHeightPct;
-
+      ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','overlayAlpha','overlayHeightPct','bottomOffset'].forEach(id=>{
+        if(document.getElementById(id)) document.getElementById(id).value = state.settings[id];
+      });
       sessionStorage.removeItem(SAVE_KEY);
-      renderSlidesList();
-      renderAll();
+      renderSlidesList(); renderAll();
     });
 
     // --- Init ---
     restore();
     renderSlidesList();
     renderAll();
-  </script></body>
-</html>ateElement('div');
-        empty.className='hint';
-        empty.textContent = 'Пока нет слайдов. Вставьте текст и нажмите «Разбить по абзацам», либо добавьте слайды вручную.';
-        elSlides.appendChild(empty);
-      }
-    }
-
-    function renderAll(){
-      document.querySelectorAll('canvas.thumb').forEach(cv=>{
-        const idx = parseInt(cv.dataset.index,10);
-        renderSlideCanvas(cv, idx);
-      });
-    }
-
-    function measureMultiline(ctx, text, maxWidth, lineHeight){
-      const words = text.split(/\s+/);
-      const lines = [];
-      let line = '';
-      for(const w of words){
-        const test = line ? line + ' ' + w : w;
-        const m = ctx.measureText(test);
-        if(m.width > maxWidth && line){
-          lines.push(line);
-          line = w;
-        } else {
-          line = test;
-        }
-      }
-      if(line) lines.push(line);
-      return {lines, height: lines.length * lineHeight};
-    }
-
-    function renderSlideCanvas(cv, index){
-      const s = state.slides[index];
-      const ctx = cv.getContext('2d');
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0,0,W,H);
-
-      const drawText = ()=>{
-        ctx.save();
-        ctx.fillStyle = state.settings.textColor;
-        ctx.textAlign = state.settings.textAlign;
-        const fs = state.settings.fontSize;
-        const lh = Math.max(1, state.settings.lineHeight) * fs;
-        ctx.font = `${fs}px ${state.settings.fontFamily}`;
-        const pad = state.settings.padding;
-        const maxW = W - pad*2;
-
-        // compute lines
-        const words = (s.text||'').split(/\s+/);
-        const lines = [];
-        let line = '';
-        for(const w of words){
-          const test = line ? line + ' ' + w : w;
-          if(ctx.measureText(test).width > maxW && line){
-            lines.push(line);
-            line = w;
-          } else {
-            line = test;
-          }
-        }
-        if(line) lines.push(line);
-
-        // overlay position & height
-        const overlayH = Math.round(H * (state.settings.overlayHeightPct/100));
-        let baseY = 0;
-        if(state.settings.textPosition==='bottom') baseY = H - overlayH;
-        else if(state.settings.textPosition==='center') baseY = (H - overlayH)/2;
-        else baseY = 0;
-
-        // fade-out rectangle (semi-transparent)
-        ctx.fillStyle = `rgba(0,0,0,${state.settings.overlayAlpha})`;
-        ctx.fillRect(0, baseY, W, overlayH);
-
-        // text block
-        const align = state.settings.textAlign;
-        const x = align==='left' ? pad : (align==='center' ? W/2 : W - pad);
-        let y = baseY + pad + fs; // first baseline
-        ctx.fillStyle = state.settings.textColor;
-        for(const ln of lines){
-          ctx.fillText(ln, x, y);
-          y += lh;
-          if(y > baseY + overlayH - pad) break; // stop if overflow
-        }
-        ctx.restore();
-      };
-
-      if(s.imgSrc){
-        const img = new Image();
-        img.onload = ()=>{
-          // cover fit
-          const rImg = img.width / img.height, rCan = W / H;
-          let sx=0, sy=0, sw=img.width, sh=img.height;
-          if(rImg > rCan){
-            // wider than canvas -> crop sides
-            const targetW = img.height * rCan;
-            sx = (img.width - targetW)/2; sw = targetW;
-          } else {
-            // taller -> crop top/bottom
-            const targetH = img.width / rCan;
-            sy = (img.height - targetH)/2; sh = targetH;
-          }
-          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
-          drawText();
-        };
-        img.src = s.imgSrc;
-      } else {
-        // no image: nice gradient placeholder
-        const g = ctx.createLinearGradient(0,0,0,H);
-        g.addColorStop(0,'#1a2030');
-        g.addColorStop(1,'#0c1020');
-        ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-        // camera glyph
-        ctx.fillStyle = '#253050';
-        ctx.fillRect(W/2-60,H/2-45,120,90);
-        ctx.beginPath(); ctx.arc(W/2, H/2, 26, 0, Math.PI*2); ctx.fillStyle='#1b2440'; ctx.fill();
-        ctx.fillStyle='#6b7da6'; ctx.font='20px Arial'; ctx.textAlign='center';
-        ctx.fillText('Нажмите чтобы добавить фото', W/2, H/2+70);
-        drawText();
-      }
-    }
-
-    // --- Touch handlers (short tap = replace/delete, long press = download) ---
-    function attachTouchHandlers(cv, index){
-      let t0 = 0, longPressed = false, timer = null;
-
-      const start = (e)=>{
-        e.preventDefault();
-        longPressed = false; t0 = Date.now(); state.currentTouchedSlide = index;
-        timer = setTimeout(()=>{ longPressed = true; downloadSlide(index); }, 650);
-      };
-      const end = (e)=>{
-        e.preventDefault();
-        clearTimeout(timer);
-        if(!longPressed){
-          // short tap: replace / delete photo
-          shortTapReplace(index);
-        }
-        state.currentTouchedSlide = null;
-      };
-
-      cv.addEventListener('touchstart', start, {passive:false});
-      cv.addEventListener('touchend', end, {passive:false});
-      cv.addEventListener('mousedown', start);
-      cv.addEventListener('mouseup', end);
-    }
-
-    function shortTapReplace(index){
-      const s = state.slides[index];
-      const hasImg = !!s.imgSrc;
-      if(hasImg){
-        const want = confirm('Удалить текущее фото и выбрать новое?');
-        if(!want) return;
-      }
-      // open picker
-      elFile.onchange = async (e)=>{
-        const file = e.target.files && e.target.files[0];
-        if(!file){ return; }
-        const dataURL = await fileToDataURL(file);
-        state.slides[index].imgSrc = dataURL;
-        renderAll();
-        queueAutosave();
-        elFile.value = '';
-      };
-      elFile.click();
-      if(hasImg){ state.slides[index].imgSrc = undefined; renderAll(); queueAutosave(); }
-    }
-
-    function fileToDataURL(file){
-      return new Promise((res,rej)=>{
-        const fr = new FileReader();
-        fr.onload = ()=>res(fr.result);
-        fr.onerror = rej; fr.readAsDataURL(file);
-      });
-    }
-
-    function downloadSlide(index){
-      // render to offscreen full-res canvas and download
-      const off = document.createElement('canvas');
-      off.width=W; off.height=H;
-      renderSlideCanvas(off, index);
-      const a = document.createElement('a');
-      a.href = off.toDataURL('image/jpeg', 0.92);
-      a.download = `slide-${index+1}.jpg`;
-      document.body.appendChild(a); a.click(); a.remove();
-    }
-
-    // --- Autosave in sessionStorage ---
-    const SAVE_KEY = 'icc_session_v1';
-    function queueAutosave(){
-      state.autosaveTS = Date.now();
-    }
-    setInterval(()=>{
-      if(!state.autosaveTS) return;
-      if(Date.now() - state.autosaveTS >= 2900){
-        try {
-          const payload = { slides: state.slides, settings: state.settings, story: elStory.value };
-          sessionStorage.setItem(SAVE_KEY, JSON.stringify(payload));
-          state.autosaveTS = 0;
-        } catch(e){ /* ignore quota */ }
-      }
-    }, 1000);
-
-    function restore(){
-      try{
-        const raw = sessionStorage.getItem(SAVE_KEY);
-        if(!raw) return;
-        const data = JSON.parse(raw);
-        Object.assign(state.settings, data.settings||{});
-        document.getElementById('fontFamily').value = state.settings.fontFamily;
-        document.getElementById('fontSize').value = state.settings.fontSize;
-        document.getElementById('textPosition').value = state.settings.textPosition;
-        document.getElementById('textAlign').value = state.settings.textAlign;
-        document.getElementById('padding').value = state.settings.padding;
-        document.getElementById('lineHeight').value = state.settings.lineHeight;
-        document.getElementById('textColor').value = state.settings.textColor;
-        document.getElementById('overlayAlpha').value = state.settings.overlayAlpha;
-        document.getElementById('overlayHeightPct').value = state.settings.overlayHeightPct;
-        state.slides = data.slides || [];
-        elStory.value = data.story || '';
-      }catch(e){/* ignore */}
-    }
-
-    // --- Clear (reset to defaults) ---
-    document.getElementById('clearBtn').addEventListener('click', ()=>{
-      if(!confirm('Очистить всё и вернуть настройки по умолчанию?')) return;
-      state.slides = [];
-      elStory.value = '';
-      Object.assign(state.settings, {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: 16,
-        textPosition: 'bottom',
-        textAlign: 'left',
-        padding: 24,
-        lineHeight: 1.4,
-        textColor: '#ffffff',
-        overlayAlpha: 0.35,
-        overlayHeightPct: 42,
-      });
-      // reflect UI
-      document.getElementById('fontFamily').value = state.settings.fontFamily;
-      document.getElementById('fontSize').value = state.settings.fontSize;
-      document.getElementById('textPosition').value = state.settings.textPosition;
-      document.getElementById('textAlign').value = state.settings.textAlign;
-      document.getElementById('padding').value = state.settings.padding;
-      document.getElementById('lineHeight').value = state.settings.lineHeight;
-      document.getElementById('textColor').value = state.settings.textColor;
-      document.getElementById('overlayAlpha').value = state.settings.overlayAlpha;
-      document.getElementById('overlayHeightPct').value = state.settings.overlayHeightPct;
-
-      sessionStorage.removeItem(SAVE_KEY);
-      renderSlidesList();
-      renderAll();
-    });
-
-    // --- Init ---
-    restore();
-    renderSlidesList();
-    renderAll();
-  </script></body>
-</html>ateElement('div');
-        empty.className='hint';
-        empty.textContent = 'Пока нет слайдов. Вставьте текст и нажмите «Разбить по абзацам», либо добавьте слайды вручную.';
-        elSlides.appendChild(empty);
-      }
-    }
-
-    function renderAll(){
-      document.querySelectorAll('canvas.thumb').forEach(cv=>{
-        const idx = parseInt(cv.dataset.index,10);
-        renderSlideCanvas(cv, idx);
-      });
-    }
-
-    function measureMultiline(ctx, text, maxWidth, lineHeight){
-      const words = text.split(/\s+/);
-      const lines = [];
-      let line = '';
-      for(const w of words){
-        const test = line ? line + ' ' + w : w;
-        const m = ctx.measureText(test);
-        if(m.width > maxWidth && line){
-          lines.push(line);
-          line = w;
-        } else {
-          line = test;
-        }
-      }
-      if(line) lines.push(line);
-      return {lines, height: lines.length * lineHeight};
-    }
-
-    function renderSlideCanvas(cv, index){
-      const s = state.slides[index];
-      const ctx = cv.getContext('2d');
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0,0,W,H);
-
-      const drawText = ()=>{
-        ctx.save();
-        ctx.fillStyle = state.settings.textColor;
-        ctx.textAlign = state.settings.textAlign;
-        const fs = state.settings.fontSize;
-        const lh = Math.max(1, state.settings.lineHeight) * fs;
-        ctx.font = `${fs}px ${state.settings.fontFamily}`;
-        const pad = state.settings.padding;
-        const maxW = W - pad*2;
-
-        // compute lines
-        const words = (s.text||'').split(/\s+/);
-        const lines = [];
-        let line = '';
-        for(const w of words){
-          const test = line ? line + ' ' + w : w;
-          if(ctx.measureText(test).width > maxW && line){
-            lines.push(line);
-            line = w;
-          } else {
-            line = test;
-          }
-        }
-        if(line) lines.push(line);
-
-        // overlay position & height
-        const overlayH = Math.round(H * (state.settings.overlayHeightPct/100));
-        let baseY = 0;
-        if(state.settings.textPosition==='bottom') baseY = H - overlayH;
-        else if(state.settings.textPosition==='center') baseY = (H - overlayH)/2;
-        else baseY = 0;
-
-        // fade-out rectangle (semi-transparent)
-        ctx.fillStyle = `rgba(0,0,0,${state.settings.overlayAlpha})`;
-        ctx.fillRect(0, baseY, W, overlayH);
-
-        // text block
-        const align = state.settings.textAlign;
-        const x = align==='left' ? pad : (align==='center' ? W/2 : W - pad);
-        let y = baseY + pad + fs; // first baseline
-        ctx.fillStyle = state.settings.textColor;
-        for(const ln of lines){
-          ctx.fillText(ln, x, y);
-          y += lh;
-          if(y > baseY + overlayH - pad) break; // stop if overflow
-        }
-        ctx.restore();
-      };
-
-      if(s.imgSrc){
-        const img = new Image();
-        img.onload = ()=>{
-          // cover fit
-          const rImg = img.width / img.height, rCan = W / H;
-          let sx=0, sy=0, sw=img.width, sh=img.height;
-          if(rImg > rCan){
-            // wider than canvas -> crop sides
-            const targetW = img.height * rCan;
-            sx = (img.width - targetW)/2; sw = targetW;
-          } else {
-            // taller -> crop top/bottom
-            const targetH = img.width / rCan;
-            sy = (img.height - targetH)/2; sh = targetH;
-          }
-          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
-          drawText();
-        };
-        img.src = s.imgSrc;
-      } else {
-        // no image: nice gradient placeholder
-        const g = ctx.createLinearGradient(0,0,0,H);
-        g.addColorStop(0,'#1a2030');
-        g.addColorStop(1,'#0c1020');
-        ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-        // camera glyph
-        ctx.fillStyle = '#253050';
-        ctx.fillRect(W/2-60,H/2-45,120,90);
-        ctx.beginPath(); ctx.arc(W/2, H/2, 26, 0, Math.PI*2); ctx.fillStyle='#1b2440'; ctx.fill();
-        ctx.fillStyle='#6b7da6'; ctx.font='20px Arial'; ctx.textAlign='center';
-        ctx.fillText('Нажмите чтобы добавить фото', W/2, H/2+70);
-        drawText();
-      }
-    }
-
-    // --- Touch handlers (short tap = replace/delete, long press = download) ---
-    function attachTouchHandlers(cv, index){
-      let t0 = 0, longPressed = false, timer = null;
-
-      const start = (e)=>{
-        e.preventDefault();
-        longPressed = false; t0 = Date.now(); state.currentTouchedSlide = index;
-        timer = setTimeout(()=>{ longPressed = true; downloadSlide(index); }, 650);
-      };
-      const end = (e)=>{
-        e.preventDefault();
-        clearTimeout(timer);
-        if(!longPressed){
-          // short tap: replace / delete photo
-          shortTapReplace(index);
-        }
-        state.currentTouchedSlide = null;
-      };
-
-      cv.addEventListener('touchstart', start, {passive:false});
-      cv.addEventListener('touchend', end, {passive:false});
-      cv.addEventListener('mousedown', start);
-      cv.addEventListener('mouseup', end);
-    }
-
-    function shortTapReplace(index){
-      const s = state.slides[index];
-      const hasImg = !!s.imgSrc;
-      if(hasImg){
-        const want = confirm('Удалить текущее фото и выбрать новое?');
-        if(!want) return;
-      }
-      // open picker
-      elFile.onchange = async (e)=>{
-        const file = e.target.files && e.target.files[0];
-        if(!file){ return; }
-        const dataURL = await fileToDataURL(file);
-        state.slides[index].imgSrc = dataURL;
-        renderAll();
-        queueAutosave();
-        elFile.value = '';
-      };
-      elFile.click();
-      if(hasImg){ state.slides[index].imgSrc = undefined; renderAll(); queueAutosave(); }
-    }
-
-    function fileToDataURL(file){
-      return new Promise((res,rej)=>{
-        const fr = new FileReader();
-        fr.onload = ()=>res(fr.result);
-        fr.onerror = rej; fr.readAsDataURL(file);
-      });
-    }
-
-    function downloadSlide(index){
-      // render to offscreen full-res canvas and download
-      const off = document.createElement('canvas');
-      off.width=W; off.height=H;
-      renderSlideCanvas(off, index);
-      const a = document.createElement('a');
-      a.href = off.toDataURL('image/jpeg', 0.92);
-      a.download = `slide-${index+1}.jpg`;
-      document.body.appendChild(a); a.click(); a.remove();
-    }
-
-    // --- Autosave in sessionStorage ---
-    const SAVE_KEY = 'icc_session_v1';
-    function queueAutosave(){
-      state.autosaveTS = Date.now();
-    }
-    setInterval(()=>{
-      if(!state.autosaveTS) return;
-      if(Date.now() - state.autosaveTS >= 2900){
-        try {
-          const payload = { slides: state.slides, settings: state.settings, story: elStory.value };
-          sessionStorage.setItem(SAVE_KEY, JSON.stringify(payload));
-          state.autosaveTS = 0;
-        } catch(e){ /* ignore quota */ }
-      }
-    }, 1000);
-
-    function restore(){
-      try{
-        const raw = sessionStorage.getItem(SAVE_KEY);
-        if(!raw) return;
-        const data = JSON.parse(raw);
-        Object.assign(state.settings, data.settings||{});
-        document.getElementById('fontFamily').value = state.settings.fontFamily;
-        document.getElementById('fontSize').value = state.settings.fontSize;
-        document.getElementById('textPosition').value = state.settings.textPosition;
-        document.getElementById('textAlign').value = state.settings.textAlign;
-        document.getElementById('padding').value = state.settings.padding;
-        document.getElementById('lineHeight').value = state.settings.lineHeight;
-        document.getElementById('textColor').value = state.settings.textColor;
-        document.getElementById('overlayAlpha').value = state.settings.overlayAlpha;
-        document.getElementById('overlayHeightPct').value = state.settings.overlayHeightPct;
-        state.slides = data.slides || [];
-        elStory.value = data.story || '';
-      }catch(e){/* ignore */}
-    }
-
-    // --- Clear (reset to defaults) ---
-    document.getElementById('clearBtn').addEventListener('click', ()=>{
-      if(!confirm('Очистить всё и вернуть настройки по умолчанию?')) return;
-      state.slides = [];
-      elStory.value = '';
-      Object.assign(state.settings, {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: 16,
-        textPosition: 'bottom',
-        textAlign: 'left',
-        padding: 24,
-        lineHeight: 1.4,
-        textColor: '#ffffff',
-        overlayAlpha: 0.35,
-        overlayHeightPct: 42,
-      });
-      // reflect UI
-      document.getElementById('fontFamily').value = state.settings.fontFamily;
-      document.getElementById('fontSize').value = state.settings.fontSize;
-      document.getElementById('textPosition').value = state.settings.textPosition;
-      document.getElementById('textAlign').value = state.settings.textAlign;
-      document.getElementById('padding').value = state.settings.padding;
-      document.getElementById('lineHeight').value = state.settings.lineHeight;
-      document.getElementById('textColor').value = state.settings.textColor;
-      document.getElementById('overlayAlpha').value = state.settings.overlayAlpha;
-      document.getElementById('overlayHeightPct').value = state.settings.overlayHeightPct;
-
-      sessionStorage.removeItem(SAVE_KEY);
-      renderSlidesList();
-      renderAll();
-    });
-
-    // --- Init ---
-    restore();
-    renderSlidesList();
-    renderAll();
-  </script></body>
-</html>
+    if(elStory.value) splitTextToSlides(elStory.value);
+  </script>
+</body>
+  </html>
