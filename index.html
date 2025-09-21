@@ -4,13 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>Instagram Carousel Creator</title>
+
+  <!-- Web fonts for reliable appearance -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+
   <style>
-    :root{
-      --bg:#0f1115;--panel:#171a21;--ink:#e8ecf1;--muted:#98a2b3;--accent:#7c9cff;--line:#222736;--btn:#23293a;--warn:#ef4444;
-    }
+    :root{ --bg:#0f1115; --panel:#171a21; --ink:#e8ecf1; --muted:#98a2b3; --accent:#7c9cff; --line:#222736; --btn:#23293a; --warn:#ef4444; }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,var(--bg),rgba(15,17,21,.6));backdrop-filter: blur(6px);}
+    header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,var(--bg),rgba(15,17,21,.6));backdrop-filter:blur(6px)}
     .wrap{max-width:960px;margin:0 auto;padding:12px}
     .col{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
     label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
@@ -23,7 +25,6 @@
     .hint{color:var(--muted);font-size:12px}
     details{background:#0a0c12;border:1px solid var(--line);border-radius:12px;padding:10px}
     summary{cursor:pointer;color:var(--ink);font-weight:600}
-
     .slides{display:flex;flex-direction:column;gap:14px;margin-top:12px}
     .slideCard{position:relative;background:#0b0e15;border:1px solid var(--line);border-radius:14px;padding:10px}
     canvas.thumb{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#000}
@@ -47,17 +48,16 @@
 
   <main class="wrap">
     <div class="col">
-      <label for="story">Story (each slide = a paragraph separated by a blank line)</label>
-      <textarea id="story" placeholder="Paste your story here.
-
+      <label for="story">Story (each slide = paragraph separated by blank line)</label>
+      <textarea id="story" placeholder="Paste story here.
 Each paragraph becomes its own slide.
 Use **bold** and *italic* if needed."></textarea>
 
       <details style="margin-top:12px">
-        <summary>Advanced style options (optional)</summary>
+        <summary>Advanced style options</summary>
         <div class="controls" style="margin-top:10px">
-          <div>
-            <label>Font family</label>
+          <!-- Body text controls -->
+          <div><label>Body font</label>
             <select id="fontFamily">
               <option value="Arial, sans-serif">Arial</option>
               <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
@@ -67,52 +67,34 @@ Use **bold** and *italic* if needed."></textarea>
               <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
             </select>
           </div>
-          <div>
-            <label>Base font size (px)</label>
-            <input id="fontSize" type="number" min="16" max="96" step="1" value="40" />
-          </div>
-          <div>
-            <label>Text align</label>
-            <select id="textAlign">
-              <option value="left">Left</option>
-              <option value="center">Center</option>
-              <option value="right">Right</option>
+          <div><label>Body font size (px)</label><input id="fontSize" type="number" min="16" max="120" step="1" value="40" /></div>
+
+          <!-- Title controls -->
+          <div><label>Title font</label>
+            <select id="titleFontFamily">
+              <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
+              <option value="Roboto, Arial, sans-serif">Roboto</option>
+              <option value="'Open Sans', Arial, sans-serif">Open Sans</option>
+              <option value="'PT Sans', Arial, sans-serif">PT Sans</option>
+              <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
+              <option value="Arial, sans-serif">Arial</option>
             </select>
           </div>
-          <div>
-            <label>Text padding (px)</label>
-            <input id="padding" type="number" min="0" max="160" value="64" />
+          <div><label>Title font size (px)</label><input id="titleFontSize" type="number" min="20" max="160" step="1" value="64" /></div>
+
+          <div><label>Text align</label>
+            <select id="textAlign"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select>
           </div>
-          <div>
-            <label>Line height</label>
-            <input id="lineHeight" type="number" min="1" max="2.4" step="0.05" value="1.25" />
-          </div>
-          <div>
-            <label>Text bottom offset (px)</label>
-            <input id="textBottomOffset" type="number" min="0" max="400" value="130" />
-          </div>
-          <div>
-            <label>Text color</label>
-            <input id="textColor" type="text" value="#ffffff" />
-          </div>
-          <div>
-            <label>Shadow (0–1)</label>
-            <input id="textShadow" type="number" min="0" max="1" step="0.05" value="0.8" />
-          </div>
+          <div><label>Text padding (px)</label><input id="padding" type="number" min="0" max="200" value="64" /></div>
+          <div><label>Line height</label><input id="lineHeight" type="number" min="1" max="2.4" step="0.05" value="1.25" /></div>
+          <div><label>Text bottom offset (px)</label><input id="textBottomOffset" type="number" min="0" max="600" value="130" /></div>
+          <div><label>Text color</label><input id="textColor" type="text" value="#ffffff" /></div>
+          <div><label>Text shadow (0–1)</label><input id="textShadow" type="number" min="0" max="1" step="0.05" value="0.8" /></div>
 
           <!-- Shadow under text -->
-          <div>
-            <label>Fade height (% of canvas)</label>
-            <input id="overlayHeightPct" type="number" min="5" max="80" step="1" value="60" />
-          </div>
-          <div>
-            <label>Backdrop opacity (0–1)</label>
-            <input id="overlayAlpha" type="number" min="0" max="1" step="0.01" value="1" />
-          </div>
-          <div>
-            <label>Corner radius (px)</label>
-            <input id="cornerRadius" type="number" min="0" max="40" step="1" value="0" />
-          </div>
+          <div><label>Fade height (% of canvas)</label><input id="overlayHeightPct" type="number" min="5" max="80" step="1" value="60" /></div>
+          <div><label>Backdrop opacity (0–1)</label><input id="overlayAlpha" type="number" min="0" max="1" step="0.01" value="1" /></div>
+          <div><label>Corner radius (px)</label><input id="cornerRadius" type="number" min="0" max="40" step="1" value="0" /></div>
         </div>
       </details>
 
@@ -121,19 +103,24 @@ Use **bold** and *italic* if needed."></textarea>
   </main>
 
   <footer>
-    <button id="clearBtn" class="btn warn clear">Clear Results — reset all (text, photos, settings)</button>
+    <button id="clearBtn" class="btn warn clear">Clear Results — reset all</button>
   </footer>
 
   <input id="filePicker" type="file" accept="image/*" style="display:none" />
 
   <script>
-    const W=1080,H=1320; // 3:4
+    const W=1080, H=1320;
 
     const state={
       slides:[],
       settings:{
+        // body
         fontFamily:'Arial, sans-serif',
         fontSize:40,
+        // title
+        titleFontFamily:"Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif",
+        titleFontSize:64,
+
         textAlign:'left',
         padding:64,
         lineHeight:1.25,
@@ -141,7 +128,6 @@ Use **bold** and *italic* if needed."></textarea>
         textShadow:0.8,
         textBottomOffset:130,
 
-        // bottom shadow under text
         overlayHeightPct:60,
         overlayAlpha:1,
         cornerRadius:0
@@ -152,78 +138,48 @@ Use **bold** and *italic* if needed."></textarea>
     const elSlides=document.getElementById('slides');
     const elFile=document.getElementById('filePicker');
 
-    // ---------- text -> slides ----------
+    // split text to slides
     function splitTextToSlides(t){
       const parts=t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
       const old=state.slides;
       state.slides=parts.map((p,i)=>({text:p,imgSrc:(old[i]&&old[i].imgSrc)||undefined,_img:null}));
-      renderSlidesList();renderAll();
+      renderSlidesList(); renderAll();
     }
     elStory.addEventListener('input',()=>splitTextToSlides(elStory.value));
 
-    // ---------- robust inline formatting (**bold**, *italic*) ----------
+    // --- robust inline formatting (**bold**, *italic*) ---
     function parseInline(text){
       const tokens=[]; let i=0;
       while(i<text.length){
-        // **bold** or __bold__
         if(text.startsWith('**',i) || text.startsWith('__',i)){
-          const m=text.substr(i,2);
-          const e=text.indexOf(m,i+2);
-          if(e!==-1){
-            tokens.push({t:text.slice(i+2,e),b:true,i:false});
-            i=e+2;
-            continue;
-          } else {
-            // no closing → treat the two chars literally
-            tokens.push({t:text.substr(i,2),b:false,i:false});
-            i+=2;
-            continue;
-          }
+          const m=text.substr(i,2), e=text.indexOf(m,i+2);
+          if(e!==-1){ tokens.push({t:text.slice(i+2,e),b:true,i:false}); i=e+2; continue; }
+          tokens.push({t:text.substr(i,2),b:false,i:false}); i+=2; continue;
         }
-        // *italic* or _italic_
         if(text[i]==='*' || text[i]==='_'){
-          const m=text[i];
-          const e=text.indexOf(m,i+1);
-          if(e!==-1){
-            tokens.push({t:text.slice(i+1,e),b:false,i:true});
-            i=e+1;
-            continue;
-          } else {
-            // single marker without closing → literal char
-            tokens.push({t:m,b:false,i:false});
-            i+=1;
-            continue;
-          }
+          const m=text[i], e=text.indexOf(m,i+1);
+          if(e!==-1){ tokens.push({t:text.slice(i+1,e),b:false,i:true}); i=e+1; continue; }
+          tokens.push({t:m,b:false,i:false}); i+=1; continue;
         }
-        // plain run until next marker
         let j=i;
-        while(
-          j<text.length &&
-          !text.startsWith('**',j) &&
-          !text.startsWith('__',j) &&
-          text[j]!=='*' &&
-          text[j]!=='_'
-        ){ j++; }
-        tokens.push({t:text.slice(i,j),b:false,i:false});
-        i=j;
+        while(j<text.length && !text.startsWith('**',j) && !text.startsWith('__',j) && text[j]!=='*' && text[j]!=='_') j++;
+        tokens.push({t:text.slice(i,j),b:false,i:false}); i=j;
       }
       return tokens;
     }
-
     function setFont(ctx,fs,fam,b,i){ ctx.font=`${b?'bold ':''}${i?'italic ':''}${fs}px ${fam}`; }
-
     function layoutLines(ctx,tokens,maxW,fs,fam){
-      const lines=[]; let line=[],w=0;
+      const lines=[]; let line=[], w=0;
       const meas=(txt,b,i)=>{ setFont(ctx,fs,fam,b,i); return ctx.measureText(txt).width; };
       for(const tok of tokens){
-        const parts=tok.t.split(/(\s+)/); // keep spaces as separate runs
+        const parts=tok.t.split(/(\s+)/);
         for(const p of parts){
           if(!p) continue;
           const ww=meas(p,tok.b,tok.i);
           if(w+ww>maxW && line.length){
             lines.push({runs:line,width:w});
             line=[{text:p,b:tok.b,i:tok.i,w:ww}]; w=ww;
-          } else {
+          }else{
             line.push({text:p,b:tok.b,i:tok.i,w:ww}); w+=ww;
           }
         }
@@ -232,7 +188,28 @@ Use **bold** and *italic* if needed."></textarea>
       return lines;
     }
 
-    // rounded clipping (optional)
+    // title detection
+    function isUppercaseLine(str){
+      const letters=str.replace(/[^A-Za-zА-ЯЁа-яёІіЇїЄєҐґ]/g,'');
+      if(!letters) return false;
+      return letters === letters.toUpperCase();
+    }
+    function extractTitleBody(text, slideIndex){
+      const hasNewline = text.includes('\n');
+      const firstLine = hasNewline ? text.split('\n')[0] : text;
+      const rest = hasNewline ? text.slice(firstLine.length+1) : '';
+
+      if(slideIndex===0){
+        // slide 1 is always a title slide (first line as title)
+        return { title:firstLine.trim(), body:rest.trim() };
+      }
+      if(hasNewline && isUppercaseLine(firstLine.trim())){
+        return { title:firstLine.trim(), body:rest.trim() };
+      }
+      return { title:'', body:text };
+    }
+
+    // rounded clip
     function clipRoundRect(ctx, x, y, w, h, r){
       if(!r) return false;
       const rr=Math.min(r, Math.min(w,h)/2);
@@ -245,22 +222,20 @@ Use **bold** and *italic* if needed."></textarea>
       ctx.closePath(); ctx.clip(); return true;
     }
 
-    // bottom fade: darkest at the bottom -> lighter upwards
+    // bottom fade
     function drawBottomFade(ctx){
       const oh=Math.max(1, Math.round(H*(state.settings.overlayHeightPct/100)));
       const yBottom=H, yTop=H-oh;
       const g=ctx.createLinearGradient(0,yBottom,0,yTop);
-      const stops=[
-        [0.00,state.settings.overlayAlpha],
-        [0.35,state.settings.overlayAlpha*0.7],
-        [0.70,state.settings.overlayAlpha*0.35],
-        [1.00,0]
-      ];
-      stops.forEach(([t,a])=>g.addColorStop(t,`rgba(0,0,0,${a})`));
+      const a=state.settings.overlayAlpha;
+      g.addColorStop(0.00, `rgba(0,0,0,${a})`);
+      g.addColorStop(0.35, `rgba(0,0,0,${a*0.7})`);
+      g.addColorStop(0.70, `rgba(0,0,0,${a*0.35})`);
+      g.addColorStop(1.00, `rgba(0,0,0,0)`);
       ctx.fillStyle=g; ctx.fillRect(0,yTop,W,oh);
     }
 
-    // ---------- rendering ----------
+    // rendering
     function renderSlidesList(){
       elSlides.innerHTML='';
       if(state.slides.length===0){
@@ -284,10 +259,13 @@ Use **bold** and *italic* if needed."></textarea>
       return wrap;
     }
 
-    function renderAll(){ document.querySelectorAll('canvas.thumb').forEach(cv=>renderSlideCanvas(cv,parseInt(cv.dataset.index,10))); }
+    function renderAll(){
+      document.querySelectorAll('canvas.thumb').forEach(cv=>renderSlideCanvas(cv,parseInt(cv.dataset.index,10)));
+    }
 
     function renderSlideCanvas(cv,index){
-      const s=state.slides[index]; const ctx=cv.getContext('2d');
+      const s=state.slides[index];
+      const ctx=cv.getContext('2d');
 
       const clipped=clipRoundRect(ctx,0,0,W,H,state.settings.cornerRadius);
       ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
@@ -307,37 +285,64 @@ Use **bold** and *italic* if needed."></textarea>
         ctx.drawImage(img,dx,dy,dw,dh);
       }
 
-      // shadow under text
       drawBottomFade(ctx);
       if(clipped) ctx.restore();
 
-      // text with bold/italic runs
-      const fs=state.settings.fontSize, lh=fs*state.settings.lineHeight, fam=state.settings.fontFamily;
-      const pad=state.settings.padding, maxW=W-pad*2;
-      const tokens=parseInline(s.text||'');
-      const lines=layoutLines(ctx,tokens,maxW,fs,fam);
-      const bottom=H-state.settings.textBottomOffset;
+      // ------- Title + Body layout -------
+      const {title, body} = extractTitleBody(s.text||'', index);
+      const pad=state.settings.padding;
+      const maxW=W - pad*2;
 
-      lines.forEach((line,i)=>{
-        const y=bottom-(lines.length-1-i)*lh;
-        let xStart=pad;
-        if(state.settings.textAlign==='center') xStart=(W-line.width)/2;
-        if(state.settings.textAlign==='right')  xStart=W-pad-line.width;
+      // Title lines
+      const fsTitle = state.settings.titleFontSize;
+      const lhTitle = fsTitle * state.settings.lineHeight;
+      const famTitle = state.settings.titleFontFamily;
+      const titleLines = title ? layoutLines(ctx, parseInline(title), maxW, fsTitle, famTitle) : [];
+
+      // Body lines
+      const fsBody = state.settings.fontSize;
+      const lhBody = fsBody * state.settings.lineHeight;
+      const famBody = state.settings.fontFamily;
+      const bodyLines = body ? layoutLines(ctx, parseInline(body), maxW, fsBody, famBody) : [];
+
+      // Combine with per-line heights
+      const allLines = [
+        ...titleLines.map(l=>({ ...l, lh: lhTitle, fam: famTitle, fs: fsTitle })),
+        ...bodyLines.map(l=>({ ...l, lh: lhBody, fam: famBody, fs: fsBody })),
+      ];
+
+      const totalHeightExceptLast = allLines.slice(0,-1).reduce((sum,l)=>sum+l.lh,0);
+      let y = H - state.settings.textBottomOffset - totalHeightExceptLast;
+
+      const align = state.settings.textAlign;
+      const color = state.settings.textColor;
+      const shadow = state.settings.textShadow;
+
+      allLines.forEach(line=>{
+        let xStart = pad;
+        if(align==='center') xStart = (W - line.width)/2;
+        if(align==='right')  xStart = W - pad - line.width;
+
         let x=xStart;
         for(const run of line.runs){
-          setFont(ctx,fs,fam,!!run.b,!!run.i);
-          ctx.fillStyle=state.settings.textColor;
-          if(state.settings.textShadow>0){
+          setFont(ctx, line.fs, line.fam, !!run.b, !!run.i);
+          ctx.fillStyle=color;
+          if(shadow>0){
             ctx.save();
-            ctx.shadowColor=`rgba(0,0,0,${state.settings.textShadow})`;
+            ctx.shadowColor=`rgba(0,0,0,${shadow})`;
             ctx.shadowBlur=12; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;
             ctx.fillText(run.text,x,y);
             ctx.restore();
-          } else {
+          }else{
             ctx.fillText(run.text,x,y);
           }
-          x+=run.w;
+          // advance by measured width for this run in its font
+          ctx.save();
+          setFont(ctx, line.fs, line.fam, !!run.b, !!run.i);
+          x += ctx.measureText(run.text).width;
+          ctx.restore();
         }
+        y += line.lh;
       });
     }
 
@@ -362,11 +367,13 @@ Use **bold** and *italic* if needed."></textarea>
 
     // clear all
     document.getElementById('clearBtn').addEventListener('click',()=>{
-      if(!confirm('Really clear all data?')) return;
+      if(!confirm('Clear all data?')) return;
       state.slides=[]; elStory.value='';
       state.settings={
         fontFamily:'Arial, sans-serif',
         fontSize:40,
+        titleFontFamily:"Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif",
+        titleFontSize:64,
         textAlign:'left',
         padding:64,
         lineHeight:1.25,
@@ -377,13 +384,13 @@ Use **bold** and *italic* if needed."></textarea>
         overlayAlpha:1,
         cornerRadius:0
       };
-      ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','textShadow','textBottomOffset','overlayHeightPct','overlayAlpha','cornerRadius']
+      ['fontFamily','fontSize','titleFontFamily','titleFontSize','textAlign','padding','lineHeight','textColor','textShadow','textBottomOffset','overlayHeightPct','overlayAlpha','cornerRadius']
         .forEach(id=>{const el=document.getElementById(id); if(el) el.value=state.settings[id];});
       renderSlidesList();
     });
 
-    // auto-apply all controls (instant preview)
-    ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','textShadow','textBottomOffset','overlayHeightPct','overlayAlpha','cornerRadius']
+    // instant apply controls
+    ['fontFamily','fontSize','titleFontFamily','titleFontSize','textAlign','padding','lineHeight','textColor','textShadow','textBottomOffset','overlayHeightPct','overlayAlpha','cornerRadius']
       .forEach(id=>{
         const el=document.getElementById(id); if(!el) return;
         ['input','change'].forEach(evt=>{
