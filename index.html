@@ -407,4 +407,95 @@ Use **bold** and *italic* if needed."></textarea>
             ctx.fillStyle=color;
             if(shadow>0){ ctx.save(); ctx.shadowColor=`rgba(0,0,0,${shadow})`; ctx.shadowBlur=12; ctx.fillText(run.text,x,y); ctx.restore(); }
             else { ctx.fillText(run.text,x,y); }
-            ctx.save(); setFont(ctx,state.settings.fontSize,state.settings.fontFamily,!!run.b,!!run.i,400); x += ctx.measureText(run.text)
+            ctx.save(); setFont(ctx,state.settings.fontSize,state.settings.fontFamily,!!run.b,!!run.i,400); x += ctx.measureText(run.text).width; ctx.restore();
+          }
+          y += state.settings.fontSize*state.settings.lineHeight;
+        });
+      } else {
+        // Only body
+        const fs=state.settings.fontSize, fam=state.settings.fontFamily;
+        const lines=layoutLines(ctx,parseInline(body||s.text||''),maxW,fs,fam,400);
+        const totalHeightExceptLast = lines.slice(0,-1).reduce((sum,l)=>sum+(fs*state.settings.lineHeight),0);
+        let y = H - state.settings.textBottomOffset - totalHeightExceptLast;
+        lines.forEach(line=>{
+          let xStart=pad; if(align==='center') xStart=(W-line.width)/2; if(align==='right') xStart=W-pad-line.width;
+          let x=xStart;
+          for(const run of line.runs){
+            setFont(ctx,fs,fam,!!run.b,!!run.i,400);
+            ctx.fillStyle=color;
+            if(shadow>0){ ctx.save(); ctx.shadowColor=`rgba(0,0,0,${shadow})`; ctx.shadowBlur=12; ctx.fillText(run.text,x,y); ctx.restore(); }
+            else { ctx.fillText(run.text,x,y); }
+            ctx.save(); setFont(ctx,fs,fam,!!run.b,!!run.i,400); x += ctx.measureText(run.text).width; ctx.restore();
+          }
+          y += fs*state.settings.lineHeight;
+        });
+      }
+    }
+
+    // Image replace & download
+    function replacePhoto(index){
+      elFile.onchange=async(e)=>{
+        const f=e.target.files&&e.target.files[0]; if(!f) return;
+        const fr=new FileReader();
+        fr.onload=()=>{ state.slides[index].imgSrc=fr.result; state.slides[index]._img=null; renderAll(); elFile.value=''; };
+        fr.readAsDataURL(f);
+      };
+      elFile.click();
+    }
+    function downloadSlide(index){
+      const cv=document.querySelectorAll('canvas.thumb')[index];
+      renderSlideCanvas(cv,index);
+      const a=document.createElement('a');
+      a.href=cv.toDataURL('image/jpeg',0.92);
+      a.download=`slide-${index+1}.jpg`;
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    // Clear
+    document.getElementById('clearBtn').addEventListener('click',()=>{
+      if(!confirm('Clear all data?')) return;
+      state.slides=[]; elStory.value='';
+      state.settings={
+        firstTitleFontFamily:"'Montserrat', Arial, sans-serif",
+        firstTitleFontWeight:600,
+        firstTitleFontSize:85,
+        firstTitleYPercent:80,
+        titleFontFamily:"'Montserrat', Arial, sans-serif",
+        titleFontWeight:600,
+        titleFontSize:65,
+        fontFamily:'Arial, sans-serif',
+        fontSize:40,
+        textAlign:'left',
+        padding:64,
+        lineHeight:1.25,
+        textColor:'#ffffff',
+        textShadow:0.8,
+        textBottomOffset:130,
+        overlayHeightPct:60,
+        overlayAlpha:1,
+        cornerRadius:0
+      };
+      // reflect defaults in controls
+      ['firstTitleFontFamily','firstTitleFontSize','firstTitleYPercent','titleFontFamily','titleFontSize','fontFamily','fontSize','textAlign','padding','lineHeight','textColor','textShadow','textBottomOffset','overlayHeightPct','overlayAlpha','cornerRadius']
+        .forEach(id=>{const el=document.getElementById(id); if(el) el.value=state.settings[id];});
+      renderSlidesList();
+    });
+
+    // Instant apply for all controls
+    ['firstTitleFontFamily','firstTitleFontSize','firstTitleYPercent','titleFontFamily','titleFontSize','fontFamily','fontSize','textAlign','padding','lineHeight','textColor','textShadow','textBottomOffset','overlayHeightPct','overlayAlpha','cornerRadius']
+      .forEach(id=>{
+        const el=document.getElementById(id); if(!el) return;
+        ['input','change'].forEach(evt=>{
+          el.addEventListener(evt, ()=>{
+            let v = (el.type==='number' || el.type==='range') ? parseFloat(el.value) : el.value;
+            state.settings[id] = isNaN(v) ? el.value : v;
+            renderAll();
+          });
+        });
+      });
+
+    // Initial render
+    renderSlidesList();
+  </script>
+</body>
+</html>
