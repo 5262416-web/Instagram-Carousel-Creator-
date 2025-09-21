@@ -745,4 +745,264 @@ footer{display:flex;justify-content:center;padding:24px}
     renderSlidesList();
     renderAll();
   </script></body>
+</html>ateElement('div');
+        empty.className='hint';
+        empty.textContent = 'Пока нет слайдов. Вставьте текст и нажмите «Разбить по абзацам», либо добавьте слайды вручную.';
+        elSlides.appendChild(empty);
+      }
+    }
+
+    function renderAll(){
+      document.querySelectorAll('canvas.thumb').forEach(cv=>{
+        const idx = parseInt(cv.dataset.index,10);
+        renderSlideCanvas(cv, idx);
+      });
+    }
+
+    function measureMultiline(ctx, text, maxWidth, lineHeight){
+      const words = text.split(/\s+/);
+      const lines = [];
+      let line = '';
+      for(const w of words){
+        const test = line ? line + ' ' + w : w;
+        const m = ctx.measureText(test);
+        if(m.width > maxWidth && line){
+          lines.push(line);
+          line = w;
+        } else {
+          line = test;
+        }
+      }
+      if(line) lines.push(line);
+      return {lines, height: lines.length * lineHeight};
+    }
+
+    function renderSlideCanvas(cv, index){
+      const s = state.slides[index];
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0,0,W,H);
+
+      const drawText = ()=>{
+        ctx.save();
+        ctx.fillStyle = state.settings.textColor;
+        ctx.textAlign = state.settings.textAlign;
+        const fs = state.settings.fontSize;
+        const lh = Math.max(1, state.settings.lineHeight) * fs;
+        ctx.font = `${fs}px ${state.settings.fontFamily}`;
+        const pad = state.settings.padding;
+        const maxW = W - pad*2;
+
+        // compute lines
+        const words = (s.text||'').split(/\s+/);
+        const lines = [];
+        let line = '';
+        for(const w of words){
+          const test = line ? line + ' ' + w : w;
+          if(ctx.measureText(test).width > maxW && line){
+            lines.push(line);
+            line = w;
+          } else {
+            line = test;
+          }
+        }
+        if(line) lines.push(line);
+
+        // overlay position & height
+        const overlayH = Math.round(H * (state.settings.overlayHeightPct/100));
+        let baseY = 0;
+        if(state.settings.textPosition==='bottom') baseY = H - overlayH;
+        else if(state.settings.textPosition==='center') baseY = (H - overlayH)/2;
+        else baseY = 0;
+
+        // fade-out rectangle (semi-transparent)
+        ctx.fillStyle = `rgba(0,0,0,${state.settings.overlayAlpha})`;
+        ctx.fillRect(0, baseY, W, overlayH);
+
+        // text block
+        const align = state.settings.textAlign;
+        const x = align==='left' ? pad : (align==='center' ? W/2 : W - pad);
+        let y = baseY + pad + fs; // first baseline
+        ctx.fillStyle = state.settings.textColor;
+        for(const ln of lines){
+          ctx.fillText(ln, x, y);
+          y += lh;
+          if(y > baseY + overlayH - pad) break; // stop if overflow
+        }
+        ctx.restore();
+      };
+
+      if(s.imgSrc){
+        const img = new Image();
+        img.onload = ()=>{
+          // cover fit
+          const rImg = img.width / img.height, rCan = W / H;
+          let sx=0, sy=0, sw=img.width, sh=img.height;
+          if(rImg > rCan){
+            // wider than canvas -> crop sides
+            const targetW = img.height * rCan;
+            sx = (img.width - targetW)/2; sw = targetW;
+          } else {
+            // taller -> crop top/bottom
+            const targetH = img.width / rCan;
+            sy = (img.height - targetH)/2; sh = targetH;
+          }
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+          drawText();
+        };
+        img.src = s.imgSrc;
+      } else {
+        // no image: nice gradient placeholder
+        const g = ctx.createLinearGradient(0,0,0,H);
+        g.addColorStop(0,'#1a2030');
+        g.addColorStop(1,'#0c1020');
+        ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+        // camera glyph
+        ctx.fillStyle = '#253050';
+        ctx.fillRect(W/2-60,H/2-45,120,90);
+        ctx.beginPath(); ctx.arc(W/2, H/2, 26, 0, Math.PI*2); ctx.fillStyle='#1b2440'; ctx.fill();
+        ctx.fillStyle='#6b7da6'; ctx.font='20px Arial'; ctx.textAlign='center';
+        ctx.fillText('Нажмите чтобы добавить фото', W/2, H/2+70);
+        drawText();
+      }
+    }
+
+    // --- Touch handlers (short tap = replace/delete, long press = download) ---
+    function attachTouchHandlers(cv, index){
+      let t0 = 0, longPressed = false, timer = null;
+
+      const start = (e)=>{
+        e.preventDefault();
+        longPressed = false; t0 = Date.now(); state.currentTouchedSlide = index;
+        timer = setTimeout(()=>{ longPressed = true; downloadSlide(index); }, 650);
+      };
+      const end = (e)=>{
+        e.preventDefault();
+        clearTimeout(timer);
+        if(!longPressed){
+          // short tap: replace / delete photo
+          shortTapReplace(index);
+        }
+        state.currentTouchedSlide = null;
+      };
+
+      cv.addEventListener('touchstart', start, {passive:false});
+      cv.addEventListener('touchend', end, {passive:false});
+      cv.addEventListener('mousedown', start);
+      cv.addEventListener('mouseup', end);
+    }
+
+    function shortTapReplace(index){
+      const s = state.slides[index];
+      const hasImg = !!s.imgSrc;
+      if(hasImg){
+        const want = confirm('Удалить текущее фото и выбрать новое?');
+        if(!want) return;
+      }
+      // open picker
+      elFile.onchange = async (e)=>{
+        const file = e.target.files && e.target.files[0];
+        if(!file){ return; }
+        const dataURL = await fileToDataURL(file);
+        state.slides[index].imgSrc = dataURL;
+        renderAll();
+        queueAutosave();
+        elFile.value = '';
+      };
+      elFile.click();
+      if(hasImg){ state.slides[index].imgSrc = undefined; renderAll(); queueAutosave(); }
+    }
+
+    function fileToDataURL(file){
+      return new Promise((res,rej)=>{
+        const fr = new FileReader();
+        fr.onload = ()=>res(fr.result);
+        fr.onerror = rej; fr.readAsDataURL(file);
+      });
+    }
+
+    function downloadSlide(index){
+      // render to offscreen full-res canvas and download
+      const off = document.createElement('canvas');
+      off.width=W; off.height=H;
+      renderSlideCanvas(off, index);
+      const a = document.createElement('a');
+      a.href = off.toDataURL('image/jpeg', 0.92);
+      a.download = `slide-${index+1}.jpg`;
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    // --- Autosave in sessionStorage ---
+    const SAVE_KEY = 'icc_session_v1';
+    function queueAutosave(){
+      state.autosaveTS = Date.now();
+    }
+    setInterval(()=>{
+      if(!state.autosaveTS) return;
+      if(Date.now() - state.autosaveTS >= 2900){
+        try {
+          const payload = { slides: state.slides, settings: state.settings, story: elStory.value };
+          sessionStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+          state.autosaveTS = 0;
+        } catch(e){ /* ignore quota */ }
+      }
+    }, 1000);
+
+    function restore(){
+      try{
+        const raw = sessionStorage.getItem(SAVE_KEY);
+        if(!raw) return;
+        const data = JSON.parse(raw);
+        Object.assign(state.settings, data.settings||{});
+        document.getElementById('fontFamily').value = state.settings.fontFamily;
+        document.getElementById('fontSize').value = state.settings.fontSize;
+        document.getElementById('textPosition').value = state.settings.textPosition;
+        document.getElementById('textAlign').value = state.settings.textAlign;
+        document.getElementById('padding').value = state.settings.padding;
+        document.getElementById('lineHeight').value = state.settings.lineHeight;
+        document.getElementById('textColor').value = state.settings.textColor;
+        document.getElementById('overlayAlpha').value = state.settings.overlayAlpha;
+        document.getElementById('overlayHeightPct').value = state.settings.overlayHeightPct;
+        state.slides = data.slides || [];
+        elStory.value = data.story || '';
+      }catch(e){/* ignore */}
+    }
+
+    // --- Clear (reset to defaults) ---
+    document.getElementById('clearBtn').addEventListener('click', ()=>{
+      if(!confirm('Очистить всё и вернуть настройки по умолчанию?')) return;
+      state.slides = [];
+      elStory.value = '';
+      Object.assign(state.settings, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: 16,
+        textPosition: 'bottom',
+        textAlign: 'left',
+        padding: 24,
+        lineHeight: 1.4,
+        textColor: '#ffffff',
+        overlayAlpha: 0.35,
+        overlayHeightPct: 42,
+      });
+      // reflect UI
+      document.getElementById('fontFamily').value = state.settings.fontFamily;
+      document.getElementById('fontSize').value = state.settings.fontSize;
+      document.getElementById('textPosition').value = state.settings.textPosition;
+      document.getElementById('textAlign').value = state.settings.textAlign;
+      document.getElementById('padding').value = state.settings.padding;
+      document.getElementById('lineHeight').value = state.settings.lineHeight;
+      document.getElementById('textColor').value = state.settings.textColor;
+      document.getElementById('overlayAlpha').value = state.settings.overlayAlpha;
+      document.getElementById('overlayHeightPct').value = state.settings.overlayHeightPct;
+
+      sessionStorage.removeItem(SAVE_KEY);
+      renderSlidesList();
+      renderAll();
+    });
+
+    // --- Init ---
+    restore();
+    renderSlidesList();
+    renderAll();
+  </script></body>
 </html>
