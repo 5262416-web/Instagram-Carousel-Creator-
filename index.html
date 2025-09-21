@@ -4,8 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>Instagram Carousel Creator</title>
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root{ --bg:#0f1115;--panel:#171a21;--ink:#e8ecf1;--muted:#98a2b3;--accent:#7c9cff;--line:#222736;--btn:#23293a;--warn:#ef4444; }
     *{box-sizing:border-box}
@@ -28,7 +29,7 @@
     .slideCard{position:relative;background:#0b0e15;border:1px solid var(--line);border-radius:14px;padding:10px}
     canvas.thumb{
       width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#000;
-      touch-action: pan-y; /* даёт скроллить страницу даже по фото */
+      touch-action: pan-y; /* свободный вертикальный скролл по фото */
     }
     .cardActions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
     .iconBtn{display:inline-flex;align-items:center;gap:8px}
@@ -63,6 +64,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
             <label>Font family</label>
             <select id="fontFamily">
               <option value="'Montserrat', Arial, sans-serif">Montserrat</option>
+              <option value="'Poppins','Helvetica Neue', Arial, sans-serif">Instagram Classic (approx.)</option>
               <option value="Arial, sans-serif">Arial</option>
               <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
               <option value="'Times New Roman', Times, serif">Times New Roman</option>
@@ -88,9 +90,9 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
           <div><label>Line height</label><input id="lineHeight" type="number" min="1" max="2.4" step="0.01" value="1.25" /></div>
           <div><label>Text padding (px)</label><input id="padding" type="number" min="0" max="160" step="1" value="64" /></div>
 
-          <div><label>Fade height (% of canvas)</label><input id="overlayHeightPct" type="number" min="10" max="90" value="20" /></div>
-          <div><label>Backdrop opacity (0–1, bottom)</label><input id="overlayAlpha" type="number" min="0" max="1" step="0.05" value="0.6" /></div>
-          <div><label>Gradient hardness (0.5–3)</label><input id="overlayHardness" type="number" min="0.5" max="3" step="0.05" value="1" /></div>
+          <div><label>Fade height (% of canvas)</label><input id="overlayHeightPct" type="number" min="5" max="90" value="20" /></div>
+          <div><label>Darkest opacity (0–1)</label><input id="overlayAlpha" type="number" min="0" max="1" step="0.05" value="0.6" /></div>
+          <div><label>Gradient curve (0.5–3)</label><input id="overlayHardness" type="number" min="0.5" max="3" step="0.05" value="1" /></div>
 
           <div><label>Corner radius (px)</label><input id="cornerRadius" type="number" min="0" max="120" step="1" value="0" /></div>
           <div><label>Text color</label><input id="textColor" type="text" value="#ffffff" /></div>
@@ -113,7 +115,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
   <input id="filePicker" type="file" accept="image/*" style="display:none" />
 
   <script>
-    const W = 1080, H = 1350; // 4:5 portrait
+    const W = 1080, H = 1350; // 4:5
     const state = {
       slides: [],
       settings: {
@@ -123,14 +125,14 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         padding: 64,
         lineHeight: 1.25,
         textColor: '#ffffff',
-        overlayAlpha: 0.6,        // bottom opacity
-        overlayHeightPct: 20,     // gradient height (%)
-        overlayHardness: 1,       // curve steepness
+        overlayAlpha: 0.6,        // darkest bottom opacity
+        overlayHeightPct: 20,     // gradient height
+        overlayHardness: 1,       // curve: >1 = плотнее внизу
         cornerRadius: 0,
         textShadow: 0.8,
         showArrow: false,
         bgColor: '#000000',
-        textBottomOffset: 48      // distance from bottom to bottom edge of text block
+        textBottomOffset: 48
       },
       autosaveTS: 0
     };
@@ -148,8 +150,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       const update = () => { state.settings[key] = transform(el.type==='checkbox' ? el.checked : el.value); renderAll(); queueAutosave(); };
       el.addEventListener('input', update);
     };
-    bindSetting('fontFamily','fontFamily');
-    bindSetting('textAlign','textAlign');
+    ['fontFamily','textAlign','textColor','bgColor'].forEach(id=>bindSetting(id,id));
     bindSetting('fontSize','fontSize', v=>parseInt(v,10));
     bindSetting('lineHeight','lineHeight', v=>parseFloat(v));
     bindSetting('padding','padding', v=>parseInt(v,10));
@@ -157,22 +158,20 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     bindSetting('overlayAlpha','overlayAlpha', v=>parseFloat(v));
     bindSetting('overlayHardness','overlayHardness', v=>parseFloat(v));
     bindSetting('cornerRadius','cornerRadius', v=>parseInt(v,10));
-    bindSetting('textColor','textColor');
     bindSetting('textShadow','textShadow', v=>parseFloat(v));
     bindSetting('textBottomOffset','textBottomOffset', v=>parseInt(v,10));
     bindSetting('showArrow','showArrow', v=>v==='on' ? true : document.getElementById('showArrow').checked);
-    bindSetting('bgColor','bgColor');
 
     // text -> slides
     function splitTextToSlides(t){
       const parts = t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
       const old = state.slides;
-      state.slides = parts.map((p,i)=>({ text: p, imgSrc: (old[i] && old[i].imgSrc) || undefined }));
+      state.slides = parts.map((p,i)=>({ text: p, imgSrc: (old[i] && old[i].imgSrc) || undefined, _img: null }));
       renderSlidesList(); renderAll();
     }
     elStory.addEventListener('input', ()=>{ splitTextToSlides(elStory.value); queueAutosave(); });
 
-    // build UI
+    // UI
     function createSlideCard(index){
       const wrap = document.createElement('div'); wrap.className = 'slideCard';
 
@@ -220,14 +219,14 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     }
     function endClip(ctx, clipped){ if(clipped){ ctx.restore(); } }
 
-    // gradient from bottom (opaque*alpha) → transparent top, with hardness exponent
+    // smooth bottom→top gradient; hardness controls curve steepness
     function drawGradientBackdrop(ctx, x, y, w, h, alphaBottom, hardness){
-      const steps = 10; // approximate exponential gradient
+      const steps = 24;
       const grd = ctx.createLinearGradient(0, y+h, 0, y);
       for(let i=0;i<=steps;i++){
-        const t = i/steps;
-        const a = alphaBottom * Math.pow(1 - t, hardness); // denser near bottom as hardness grows
-        grd.addColorStop(1 - t, `rgba(0,0,0,${Math.max(0, Math.min(1, a))})`);
+        const t = i/steps;                 // 0..1 from bottom to top
+        const a = alphaBottom * Math.pow(1 - t, hardness); // denser at bottom
+        grd.addColorStop(1 - t, `rgba(0,0,0,${a})`);
       }
       ctx.fillStyle = grd; ctx.fillRect(x, y, w, h);
     }
@@ -244,7 +243,6 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       return lines;
     }
 
-    // single place rendering (what you see = what you download)
     function drawFrame(ctx, slide, index){
       // background
       ctx.fillStyle = state.settings.bgColor || '#000';
@@ -252,7 +250,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
 
       const clipped = roundedClip(ctx,0,0,W,H,state.settings.cornerRadius);
 
-      // photo (cover)
+      // image (cover fit, centered)
       if(slide.imgSrc && slide._img && slide._img.complete){
         const img = slide._img;
         const rImg = img.width / img.height, rCan = W / H;
@@ -262,7 +260,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         ctx.drawImage(img, cx, cy, dw, dh);
       }
 
-      // compute text metrics (independent of overlay height)
+      // text metrics
       const fs = state.settings.fontSize;
       const lh = Math.max(1, state.settings.lineHeight) * fs;
       ctx.font = `${fs}px ${state.settings.fontFamily}`;
@@ -270,19 +268,20 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       const pad = state.settings.padding;
       const maxW = W - pad*2;
       const lines = wrapLines(ctx, slide.text, maxW);
-      const textBlockHeight = Math.min(lines.length * lh, H); // rough
-      const bottomEdge = H - state.settings.textBottomOffset;
-      const firstBaseline = bottomEdge - (textBlockHeight - fs) - pad;
 
-      // overlay: under text, independent height
+      // overlay independent from text: sits at bottom
       const overlayH = Math.round(H * (state.settings.overlayHeightPct/100));
       const overlayTop = H - overlayH;
       drawGradientBackdrop(ctx, 0, overlayTop, W, overlayH, state.settings.overlayAlpha, state.settings.overlayHardness);
 
-      // text
+      // text block anchored from bottom by offset
+      const textBottom = H - state.settings.textBottomOffset;
+      let y = textBottom - (lines.length-1)*lh; // last line touches bottom offset (with padding accounted below)
+      // shift up by padding so there's a gap to bottom
+      y -= Math.max(0, (fs - pad));
       const x = (state.settings.textAlign==='left') ? pad : (state.settings.textAlign==='center' ? W/2 : W - pad);
-      let y = firstBaseline;
       ctx.fillStyle = state.settings.textColor;
+
       if(state.settings.textShadow>0){
         ctx.save();
         ctx.shadowColor = `rgba(0,0,0,${state.settings.textShadow})`;
@@ -293,7 +292,6 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         for(const ln of lines){ ctx.fillText(ln, x, y); y += lh; if(y > H - pad) break; }
       }
 
-      // optional arrow
       if(state.settings.showArrow && index < state.slides.length-1){
         ctx.save(); ctx.globalAlpha = 0.75; ctx.fillStyle = '#ffffff';
         const size = 36, ax = W - 24, ay = H/2;
@@ -305,11 +303,9 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       endClip(ctx, clipped);
     }
 
-    // render onto on-screen canvas
     function renderSlideCanvas(cv, index){
       const s = state.slides[index];
       const ctx = cv.getContext('2d');
-      // ensure image object cached
       if(s.imgSrc && !s._img){
         s._img = new Image();
         s._img.onload = ()=>{ drawFrame(ctx, s, index); };
@@ -318,28 +314,18 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       drawFrame(ctx, s, index);
     }
 
-    // render to an offscreen canvas AND wait for image if needed
     function renderToCanvas(index, canvas){
       return new Promise((resolve)=>{
         const s = state.slides[index];
         const ctx = canvas.getContext('2d');
-
         const doDraw = ()=>{ drawFrame(ctx, s, index); resolve(); };
-
         if(s.imgSrc){
           if(s._img && s._img.complete){ doDraw(); }
-          else {
-            const img = new Image();
-            img.onload = ()=>{ s._img = img; doDraw(); };
-            img.src = s.imgSrc;
-          }
-        } else {
-          doDraw();
-        }
+          else { const img = new Image(); img.onload=()=>{ s._img=img; doDraw(); }; img.src=s.imgSrc; }
+        } else doDraw();
       });
     }
 
-    // replace photo
     function replacePhoto(index){
       elFile.onchange = async (e)=>{
         const file = e.target.files && e.target.files[0];
@@ -353,7 +339,6 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     }
     function fileToDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); }); }
 
-    // download (await render to avoid black images)
     async function downloadSlide(index){
       const off = document.createElement('canvas'); off.width=W; off.height=H;
       await renderToCanvas(index, off);
@@ -362,7 +347,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     }
 
     // autosave
-    const SAVE_KEY='icc_session_v9';
+    const SAVE_KEY='icc_session_v10';
     function queueAutosave(){ state.autosaveTS=Date.now(); }
     setInterval(()=>{ if(!state.autosaveTS) return;
       if(Date.now()-state.autosaveTS>=2900){ try{
@@ -400,4 +385,4 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     restore(); renderSlidesList(); renderAll(); if(elStory.value) splitTextToSlides(elStory.value);
   </script>
 </body>
-  </html>
+</html>
