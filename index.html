@@ -16,7 +16,7 @@
     .col{flex:1 1 320px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
     label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
     textarea{width:100%;min-height:140px;resize:vertical;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;line-height:1.5}
-    select,input[type="number"],input[type="range"],input[type="text"]{width:100%;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px}
+    select,input[type="number"],input[type="text"]{width:100%;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px}
     .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .btn{appearance:none;border:1px solid var(--line);background:var(--btn);color:var(--ink);padding:10px 12px;border-radius:12px;font-weight:600}
     .btn.secondary{background:#0a0c12}
@@ -25,16 +25,11 @@
     details{background:#0a0c12;border:1px solid var(--line);border-radius:12px;padding:10px}
     summary{cursor:pointer;color:var(--ink);font-weight:600}
 
-    /* Slides strip */
-    .slides{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}
-    .slideCard{position:relative;min-width:220px;background:#0b0e15;border:1px solid var(--line);border-radius:14px;padding:8px}
-    .slideHead{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+    /* Slides list — vertical */
+    .slides{display:flex;flex-direction:column;gap:14px;overflow-y:auto;max-height:70vh;padding-right:4px}
+    .slideCard{position:relative;background:#0b0e15;border:1px solid var(--line);border-radius:14px;padding:10px}
+    .slideHead{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px}
     canvas.thumb{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#000;touch-action:none}
-    .replaceBtn{position:absolute;top:14px;right:14px;z-index:3;display:none}
-    .slideCard.hasImg .replaceBtn{display:inline-flex}
-
-    .toolbar{display:flex;gap:8px;flex-wrap:wrap}
-    .pill{font-size:12px;border:1px solid var(--line);background:#0a0c12;padding:6px 8px;border-radius:999px}
 
     footer{display:flex;justify-content:center;padding:24px}
     .clear{opacity:.8}
@@ -47,9 +42,9 @@
   <header>
     <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:10px;flex:1 1 auto">
-        <div class="badge">📸 Instagram Carousel Creator <span class="accent">1320×1080</span></div>
+        <div class="badge">📸 Instagram Carousel Creator <span class="accent">1080×1350</span></div>
       </div>
-      <button id="addSlideBtn" class="btn">+ Slide</button>
+      <!-- +Slide removed by request -->
     </div>
   </header>
 
@@ -60,9 +55,7 @@
         <textarea id="story" placeholder="Paste your story here.
 
 Each paragraph separated by an empty line becomes a new slide."></textarea>
-        <div class="toolbar" style="margin-top:10px">
-          <span class="pill">Auto-save every ~3s (this session)</span>
-        </div>
+        <div class="hint" style="margin-top:8px">Auto-save every ~3s (this session). Slides generate automatically.</div>
 
         <details style="margin-top:12px">
           <summary>Text & overlay settings</summary>
@@ -78,8 +71,8 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
               </select>
             </div>
             <div>
-              <label>Font size (px) — default 16</label>
-              <input id="fontSize" type="number" min="12" max="96" step="1" value="16" />
+              <label>Font size (px) — default 45</label>
+              <input id="fontSize" type="number" min="12" max="120" step="1" value="45" />
             </div>
             <div>
               <label>Text alignment</label>
@@ -119,7 +112,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
 
       <div class="col" style="flex:1 1 420px">
         <div class="slideHead"><span>Slides</span>
-          <div class="pill">Long press — download • Tap ✖ to replace photo • Drag photo to reposition</div>
+          <div class="hint">Long press — download JPG • Use the button below to replace photo • Drag photo to reposition</div>
         </div>
         <div id="slides" class="slides"></div>
       </div>
@@ -134,12 +127,12 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
 
   <script>
     // --- App State ---
-    const W = 1320, H = 1080; // Instagram 4:3 landscape
+    const W = 1080, H = 1350; // 4:5 portrait
     const state = {
       slides: [], // { text: string, imgSrc?: dataURL, offset:{x,y} }
       settings: {
         fontFamily: 'Arial, sans-serif',
-        fontSize: 16,
+        fontSize: 45,
         textAlign: 'left',
         padding: 24,
         lineHeight: 1.4,
@@ -156,12 +149,12 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     const elSlides = document.getElementById('slides');
     const elFile = document.getElementById('filePicker');
 
+    // bind settings
     const bindSetting = (id, key, transform=(v)=>v, rev=(v)=>v) => {
       const el = document.getElementById(id);
       el.value = rev(state.settings[key]);
       el.addEventListener('input', () => { state.settings[key] = transform(el.value); renderAll(); queueAutosave(); });
     };
-
     bindSetting('fontFamily','fontFamily');
     bindSetting('fontSize','fontSize', v=>parseInt(v,10));
     bindSetting('textAlign','textAlign');
@@ -172,41 +165,25 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     bindSetting('overlayHeightPct','overlayHeightPct', v=>parseInt(v,10));
     bindSetting('bottomOffset','bottomOffset', v=>parseInt(v,10));
 
-    // --- Text to slides (auto on input) ---
+    // --- Slides from text (auto) ---
     function splitTextToSlides(t){
       const parts = t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
       const old = state.slides;
-      state.slides = parts.map((p,i)=>({ text: p, imgSrc: (old[i] && old[i].imgSrc) || undefined, offset: (old[i] && old[i].offset) || {x:0,y:0} }));
+      state.slides = parts.map((p,i)=>({
+        text: p,
+        imgSrc: (old[i] && old[i].imgSrc) || undefined,
+        offset: (old[i] && old[i].offset) || {x:0,y:0}
+      }));
       renderSlidesList();
       renderAll();
     }
-
     elStory.addEventListener('input', ()=>{ splitTextToSlides(elStory.value); queueAutosave(); });
-
-    document.getElementById('addSlideBtn').addEventListener('click', ()=>{
-      state.slides.push({text: 'New slide', imgSrc: undefined, offset:{x:0,y:0}});
-      renderSlidesList();
-      renderAll();
-      queueAutosave();
-    });
 
     // --- Rendering ---
     function createSlideCard(index){
       const s = state.slides[index];
       const wrap = document.createElement('div');
-      wrap.className = 'slideCard' + (s.imgSrc ? ' hasImg' : '');
-
-      const head = document.createElement('div');
-      head.className='slideHead';
-      head.innerHTML = `<span>#${index+1}</span><button class="btn secondary" data-edit-text>Text</button>`;
-      wrap.appendChild(head);
-
-      const replace = document.createElement('button');
-      replace.className='btn secondary replaceBtn';
-      replace.textContent='✖';
-      replace.title='Replace photo';
-      replace.addEventListener('click', (e)=>{ e.stopPropagation(); replacePhoto(index); });
-      wrap.appendChild(replace);
+      wrap.className = 'slideCard';
 
       const c = document.createElement('canvas');
       c.width = W; c.height = H; c.className='thumb';
@@ -214,11 +191,11 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       attachCanvasHandlers(c, index);
       wrap.appendChild(c);
 
-      // edit text
-      head.querySelector('[data-edit-text]').addEventListener('click', ()=>{
-        const newText = prompt('Edit slide text', state.slides[index].text || '');
-        if(newText!==null){ state.slides[index].text = newText; renderSlideCanvas(c, index); queueAutosave(); }
-      });
+      const replaceBtn = document.createElement('button');
+      replaceBtn.className = 'btn secondary';
+      replaceBtn.textContent = 'Replace photo';
+      replaceBtn.addEventListener('click', (e)=>{ e.stopPropagation(); replacePhoto(index); });
+      wrap.appendChild(replaceBtn);
 
       renderSlideCanvas(c, index);
       return wrap;
@@ -226,9 +203,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
 
     function renderSlidesList(){
       elSlides.innerHTML = '';
-      state.slides.forEach((_,i)=>{
-        elSlides.appendChild(createSlideCard(i));
-      });
+      state.slides.forEach((_,i)=>{ elSlides.appendChild(createSlideCard(i)); });
       if(state.slides.length===0){
         const empty = document.createElement('div');
         empty.className='hint';
@@ -241,16 +216,13 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       document.querySelectorAll('canvas.thumb').forEach(cv=>{
         const idx = parseInt(cv.dataset.index,10);
         renderSlideCanvas(cv, idx);
-        const card = cv.parentElement; if(!card) return;
-        if(state.slides[idx].imgSrc) card.classList.add('hasImg'); else card.classList.remove('hasImg');
       });
     }
 
     function renderSlideCanvas(cv, index){
       const s = state.slides[index];
       const ctx = cv.getContext('2d');
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0,0,W,H);
+      ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
 
       const drawTextAtBottom = ()=>{
         ctx.save();
@@ -261,18 +233,17 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         const pad = state.settings.padding;
         const maxW = W - pad*2;
 
+        // wrap lines
         const words = (s.text||'').split(/\s+/);
-        const lines = [];
-        let line = '';
+        const lines = []; let line = '';
         for(const w of words){
           const test = line ? line + ' ' + w : w;
-          if(ctx.measureText(test).width > maxW && line){
-            lines.push(line);
-            line = w;
-          } else { line = test; }
+          if(ctx.measureText(test).width > maxW && line){ lines.push(line); line = w; }
+          else { line = test; }
         }
         if(line) lines.push(line);
 
+        // overlay at bottom
         const overlayH = Math.round(H * (state.settings.overlayHeightPct/100));
         const baseY = H - overlayH - state.settings.bottomOffset;
 
@@ -294,10 +265,10 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       if(s.imgSrc){
         const img = new Image();
         img.onload = ()=>{
+          // contain/cover hybrid with user offset to let user reposition image
           const rImg = img.width / img.height, rCan = W / H;
           let dw=W, dh=H;
-          if(rImg > rCan){ dh = W / rImg; dw = W; }
-          else { dw = H * rImg; dh = H; }
+          if(rImg > rCan){ dh = W / rImg; dw = W; } else { dw = H * rImg; dh = H; }
           const cx = (W - dw)/2 + (s.offset?.x||0);
           const cy = (H - dh)/2 + (s.offset?.y||0);
           ctx.drawImage(img, cx, cy, dw, dh);
@@ -305,46 +276,42 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         };
         img.src = s.imgSrc;
       } else {
+        // gradient placeholder + text
         const g = ctx.createLinearGradient(0,0,0,H);
         g.addColorStop(0,'#1a2030'); g.addColorStop(1,'#0c1020');
         ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-        ctx.fillStyle='#6b7da6'; ctx.font='20px Arial'; ctx.textAlign='center';
-        ctx.fillText('Tap ✖ to add a photo above', W/2, H/2+60);
         drawTextAtBottom();
       }
     }
 
-    // --- Canvas interactions ---
+    // --- Interactions ---
     function attachCanvasHandlers(cv, index){
-      let longPressed = false, timer=null, isDragging=false, last={x:0,y:0};
+      let timer=null, isDragging=false, last={x:0,y:0};
 
       const start = (e)=>{
         e.preventDefault();
-        const pt = getPoint(e, cv);
-        isDragging=false; longPressed=false; last=pt;
-        timer = setTimeout(()=>{ if(!isDragging){ longPressed=true; downloadSlide(index); } }, 650);
+        isDragging=false; last=getPoint(e, cv);
+        // long press = download
+        timer = setTimeout(()=>{ if(!isDragging){ downloadSlide(index); } }, 650);
       };
       const move = (e)=>{
         const s = state.slides[index]; if(!s.imgSrc) return;
         const pt = getPoint(e, cv);
         if(Math.hypot(pt.x-last.x, pt.y-last.y)>2){
-          isDragging=true;
-          clearTimeout(timer);
+          isDragging=true; clearTimeout(timer);
           s.offset = s.offset || {x:0,y:0};
           s.offset.x += pt.x - last.x; s.offset.y += pt.y - last.y;
-          last = pt;
-          renderSlideCanvas(cv, index);
-          queueAutosave();
+          last = pt; renderSlideCanvas(cv, index); queueAutosave();
         }
       };
       const end = (e)=>{ e.preventDefault(); clearTimeout(timer); };
 
       cv.addEventListener('touchstart', start, {passive:false});
-      cv.addEventListener('touchmove', move, {passive:false});
-      cv.addEventListener('touchend', end, {passive:false});
+      cv.addEventListener('touchmove',  move,  {passive:false});
+      cv.addEventListener('touchend',   end,   {passive:false});
       cv.addEventListener('mousedown', start);
       cv.addEventListener('mousemove', move);
-      cv.addEventListener('mouseup', end);
+      cv.addEventListener('mouseup',   end);
     }
 
     function getPoint(e, el){
@@ -355,7 +322,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     function replacePhoto(index){
       elFile.onchange = async (e)=>{
         const file = e.target.files && e.target.files[0];
-        if(!file){ return; }
+        if(!file) return;
         const dataURL = await fileToDataURL(file);
         state.slides[index].imgSrc = dataURL;
         state.slides[index].offset = {x:0,y:0};
@@ -376,7 +343,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     }
 
     // --- Autosave in sessionStorage ---
-    const SAVE_KEY = 'icc_session_v2';
+    const SAVE_KEY = 'icc_session_v3';
     function queueAutosave(){ state.autosaveTS = Date.now(); }
     setInterval(()=>{
       if(!state.autosaveTS) return;
@@ -393,9 +360,8 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       try{
         const raw = sessionStorage.getItem(SAVE_KEY); if(!raw) return; const data = JSON.parse(raw);
         Object.assign(state.settings, data.settings||{});
-        ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','overlayAlpha','overlayHeightPct','bottomOffset'].forEach(id=>{
-          if(document.getElementById(id)) document.getElementById(id).value = state.settings[id];
-        });
+        ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','overlayAlpha','overlayHeightPct','bottomOffset']
+          .forEach(id=>{ if(document.getElementById(id)) document.getElementById(id).value = state.settings[id]; });
         state.slides = (data.slides||[]).map(s=>({text:s.text||'', imgSrc:s.imgSrc, offset:s.offset||{x:0,y:0}}));
         elStory.value = data.story || '';
       }catch(e){}
@@ -404,11 +370,10 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     // --- Clear (reset to defaults) ---
     document.getElementById('clearBtn').addEventListener('click', ()=>{
       if(!confirm('Reset everything to defaults?')) return;
-      state.slides = [];
-      elStory.value = '';
+      state.slides = []; elStory.value = '';
       Object.assign(state.settings, {
         fontFamily: 'Arial, sans-serif',
-        fontSize: 16,
+        fontSize: 45,
         textAlign: 'left',
         padding: 24,
         lineHeight: 1.4,
@@ -417,18 +382,16 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         overlayHeightPct: 42,
         bottomOffset: 0,
       });
-      ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','overlayAlpha','overlayHeightPct','bottomOffset'].forEach(id=>{
-        if(document.getElementById(id)) document.getElementById(id).value = state.settings[id];
-      });
+      ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','overlayAlpha','overlayHeightPct','bottomOffset']
+        .forEach(id=>{ if(document.getElementById(id)) document.getElementById(id).value = state.settings[id]; });
       sessionStorage.removeItem(SAVE_KEY);
       renderSlidesList(); renderAll();
     });
 
     // --- Init ---
     restore();
-    renderSlidesList();
-    renderAll();
+    renderSlidesList(); renderAll();
     if(elStory.value) splitTextToSlides(elStory.value);
   </script>
 </body>
-  </html>
+</html>
