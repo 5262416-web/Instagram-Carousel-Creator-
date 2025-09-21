@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
@@ -47,16 +47,17 @@
 
   <main class="wrap">
     <div class="col">
-      <label for="story">История (каждый слайд — отдельный абзац, разделённый пустой строкой)</label>
-      <textarea id="story" placeholder="Вставьте текст истории.
+      <label for="story">Story (each slide = a paragraph separated by a blank line)</label>
+      <textarea id="story" placeholder="Paste your story here.
 
-Каждый абзац станет отдельным слайдом. Используйте **жирный** и *курсив* при необходимости."></textarea>
+Each paragraph becomes its own slide.
+Use **bold** and *italic* if needed."></textarea>
 
       <details style="margin-top:12px">
-        <summary>Доп. настройки текста</summary>
+        <summary>Advanced style options (optional)</summary>
         <div class="controls" style="margin-top:10px">
           <div>
-            <label>Шрифт</label>
+            <label>Font family</label>
             <select id="fontFamily">
               <option value="Arial, sans-serif">Arial</option>
               <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
@@ -67,39 +68,39 @@
             </select>
           </div>
           <div>
-            <label>Размер шрифта (px)</label>
+            <label>Base font size (px)</label>
             <input id="fontSize" type="number" min="16" max="96" step="1" value="40" />
           </div>
           <div>
-            <label>Выравнивание</label>
+            <label>Text align</label>
             <select id="textAlign">
-              <option value="left">Слева</option>
-              <option value="center">По центру</option>
-              <option value="right">Справа</option>
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
             </select>
           </div>
           <div>
-            <label>Отступы текста (px)</label>
+            <label>Text padding (px)</label>
             <input id="padding" type="number" min="0" max="160" value="64" />
           </div>
           <div>
-            <label>Межстрочный интервал</label>
+            <label>Line height</label>
             <input id="lineHeight" type="number" min="1" max="2.4" step="0.05" value="1.25" />
           </div>
           <div>
-            <label>Отступ от низа (px)</label>
+            <label>Text bottom offset (px)</label>
             <input id="textBottomOffset" type="number" min="0" max="400" value="130" />
           </div>
           <div>
-            <label>Цвет текста</label>
+            <label>Text color</label>
             <input id="textColor" type="text" value="#ffffff" />
           </div>
           <div>
-            <label>Тень текста (0–1)</label>
+            <label>Shadow (0–1)</label>
             <input id="textShadow" type="number" min="0" max="1" step="0.05" value="0.8" />
           </div>
 
-          <!-- ▼ Настройки тени под текстом -->
+          <!-- Shadow under text -->
           <div>
             <label>Fade height (% of canvas)</label>
             <input id="overlayHeightPct" type="number" min="5" max="80" step="1" value="60" />
@@ -120,7 +121,7 @@
   </main>
 
   <footer>
-    <button id="clearBtn" class="btn warn clear">Clear Results — сбросить всё (текст, фото, настройки)</button>
+    <button id="clearBtn" class="btn warn clear">Clear Results — reset all (text, photos, settings)</button>
   </footer>
 
   <input id="filePicker" type="file" accept="image/*" style="display:none" />
@@ -140,10 +141,10 @@
         textShadow:0.8,
         textBottomOffset:130,
 
-        // ▼ тень под текстом (как на скрине)
-        overlayHeightPct:60,  // % высоты холста
-        overlayAlpha:1,       // насыщенность у нижней кромки
-        cornerRadius:0        // скругление холста (опционально)
+        // bottom shadow under text
+        overlayHeightPct:60,
+        overlayAlpha:1,
+        cornerRadius:0
       }
     };
 
@@ -151,40 +152,7 @@
     const elSlides=document.getElementById('slides');
     const elFile=document.getElementById('filePicker');
 
-    // ---- helpers ----
-    function parseInline(text){const tokens=[];let i=0;while(i<text.length){if(text.startsWith('**',i)||text.startsWith('__',i)){const m=text.substr(i,2),e=text.indexOf(m,i+2);if(e!==-1){tokens.push({t:text.slice(i+2,e),b:true,i:false});i=e+2;continue}}if(text[i]==='*'||text[i]==='_'){const m=text[i],e=text.indexOf(m,i+1);if(e!==-1){tokens.push({t:text.slice(i+1,e),b:false,i:true});i=e+1;continue}}let j=i;while(j<text.length&&!(text.startsWith('**',j)||text.startsWith('__',j)||text[j]==='*'||text[j]==='_'))j++;tokens.push({t:text.slice(i,j),b:false,i:false});i=j}return tokens}
-    function setFont(ctx,fs,fam,b,i){ctx.font=`${b?'bold ':''}${i?'italic ':''}${fs}px ${fam}`}
-    function layoutLines(ctx,tokens,maxW,fs,fam){const lines=[];let line=[],w=0;const meas=(txt,b,i)=>{setFont(ctx,fs,fam,b,i);return ctx.measureText(txt).width};for(const tok of tokens){const parts=tok.t.split(/(\s+)/);for(const p of parts){if(!p)continue;const ww=meas(p,tok.b,tok.i);if(w+ww>maxW&&line.length){lines.push({runs:line,width:w});line=[{text:p,b:tok.b,i:tok.i,w:ww}];w=ww}else{line.push({text:p,b:tok.b,i:tok.i,w:ww});w+=ww}}}if(line.length)lines.push({runs:line,width:w});return lines}
-
-    // скругление холста (по желанию)
-    function clipRoundRect(ctx, x, y, w, h, r){
-      if(!r) return false;
-      const rr=Math.min(r, Math.min(w,h)/2);
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(x+rr,y);
-      ctx.arcTo(x+w,y,  x+w,y+h, rr);
-      ctx.arcTo(x+w,y+h,x,  y+h, rr);
-      ctx.arcTo(x,  y+h,x,  y,   rr);
-      ctx.arcTo(x,  y,  x+w,y,   rr);
-      ctx.closePath();
-      ctx.clip();
-      return true;
-    }
-
-    // тень снизу вверх: чёрная у кромки → светлее вверх
-    function drawBottomFade(ctx, canvasH, overlayPct, alpha){
-      const oh=Math.max(1, Math.round(canvasH*(overlayPct/100)));
-      const yBottom=canvasH;
-      const yTop=canvasH-oh;
-      const g=ctx.createLinearGradient(0, yBottom, 0, yTop); // снизу → вверх
-      // плавная «киношная» растяжка
-      const stops=[[0.00,alpha],[0.35,alpha*0.7],[0.70,alpha*0.35],[1.00,0]];
-      stops.forEach(([t,a])=>g.addColorStop(t,`rgba(0,0,0,${a})`));
-      ctx.fillStyle=g; ctx.fillRect(0, yTop, W, oh);
-    }
-
-    // ---- core ----
+    // ---------- text -> slides ----------
     function splitTextToSlides(t){
       const parts=t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
       const old=state.slides;
@@ -193,32 +161,99 @@
     }
     elStory.addEventListener('input',()=>splitTextToSlides(elStory.value));
 
-    function createSlideCard(index){
-      const wrap=document.createElement('div');wrap.className='slideCard';
-      const c=document.createElement('canvas');c.width=W;c.height=H;c.className='thumb';c.dataset.index=index;wrap.appendChild(c);
-      const actions=document.createElement('div');actions.className='cardActions';
-      const replaceBtn=document.createElement('button');replaceBtn.className='btn secondary';replaceBtn.textContent='Replace photo';replaceBtn.addEventListener('click',()=>replacePhoto(index));actions.appendChild(replaceBtn);
-      const dlBtn=document.createElement('button');dlBtn.className='btn secondary iconBtn';dlBtn.title='Скачать JPG';dlBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a1 1 0 011 1v9.586l2.293-2.293a1 1 0 111.414 1.414l-4.001 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L11 13.586V4a1 1 0 011-1z"/><path d="M5 20a2 2 0 002 2h10a2 2 0 002-2v-3a1 1 0 10-2 0v3H7v-3a1 1 0 10-2 0v3z"/></svg>`;dlBtn.addEventListener('click',()=>downloadSlide(index));actions.appendChild(dlBtn);
-      wrap.appendChild(actions);
-      renderSlideCanvas(c,index);return wrap;
+    // ---------- inline formatting (**bold**, *italic*) ----------
+    function parseInline(text){
+      const tokens=[]; let i=0;
+      while(i<text.length){
+        if(text.startsWith('**',i)||text.startsWith('__',i)){
+          const m=text.substr(i,2),e=text.indexOf(m,i+2);
+          if(e!==-1){ tokens.push({t:text.slice(i+2,e),b:true,i:false}); i=e+2; continue; }
+        }
+        if(text[i]==='*'||text[i]==='_'){
+          const m=text[i],e=text.indexOf(m,i+1);
+          if(e!==-1){ tokens.push({t:text.slice(i+1,e),b:false,i:true}); i=e+1; continue; }
+        }
+        let j=i; while(j<text.length && !(text.startsWith('**',j)||text.startsWith('__',j)||text[j]==='*'||text[j]==='_')) j++;
+        tokens.push({t:text.slice(i,j),b:false,i:false}); i=j;
+      }
+      return tokens;
+    }
+    function setFont(ctx,fs,fam,b,i){ ctx.font=`${b?'bold ':''}${i?'italic ':''}${fs}px ${fam}`; }
+    function layoutLines(ctx,tokens,maxW,fs,fam){
+      const lines=[]; let line=[],w=0;
+      const meas=(txt,b,i)=>{ setFont(ctx,fs,fam,b,i); return ctx.measureText(txt).width; };
+      for(const tok of tokens){
+        const parts=tok.t.split(/(\s+)/);
+        for(const p of parts){
+          if(!p) continue;
+          const ww=meas(p,tok.b,tok.i);
+          if(w+ww>maxW && line.length){
+            lines.push({runs:line,width:w});
+            line=[{text:p,b:tok.b,i:tok.i,w:ww}]; w=ww;
+          } else {
+            line.push({text:p,b:tok.b,i:tok.i,w:ww}); w+=ww;
+          }
+        }
+      }
+      if(line.length) lines.push({runs:line,width:w});
+      return lines;
     }
 
+    // rounded clipping (optional)
+    function clipRoundRect(ctx, x, y, w, h, r){
+      if(!r) return false;
+      const rr=Math.min(r, Math.min(w,h)/2);
+      ctx.save(); ctx.beginPath();
+      ctx.moveTo(x+rr,y);
+      ctx.arcTo(x+w,y,  x+w,y+h, rr);
+      ctx.arcTo(x+w,y+h,x,  y+h, rr);
+      ctx.arcTo(x,  y+h,x,  y,   rr);
+      ctx.arcTo(x,  y,  x+w,y,   rr);
+      ctx.closePath(); ctx.clip(); return true;
+    }
+
+    // bottom fade: darkest at the bottom -> lighter upwards
+    function drawBottomFade(ctx){
+      const oh=Math.max(1, Math.round(H*(state.settings.overlayHeightPct/100)));
+      const yBottom=H, yTop=H-oh;
+      const g=ctx.createLinearGradient(0,yBottom,0,yTop);
+      const stops=[[0.00,state.settings.overlayAlpha],[0.35,state.settings.overlayAlpha*0.7],[0.70,state.settings.overlayAlpha*0.35],[1.00,0]];
+      stops.forEach(([t,a])=>g.addColorStop(t,`rgba(0,0,0,${a})`));
+      ctx.fillStyle=g; ctx.fillRect(0,yTop,W,oh);
+    }
+
+    // ---------- rendering ----------
     function renderSlidesList(){
       elSlides.innerHTML='';
-      if(state.slides.length===0){const empty=document.createElement('div');empty.className='hint';empty.textContent='Начните с текста — слайды появятся автоматически.';elSlides.appendChild(empty);return}
+      if(state.slides.length===0){
+        const empty=document.createElement('div'); empty.className='hint';
+        empty.textContent='Start with text — slides will appear automatically.'; elSlides.appendChild(empty); return;
+      }
       state.slides.forEach((_,i)=>elSlides.appendChild(createSlideCard(i)));
     }
 
-    function renderAll(){document.querySelectorAll('canvas.thumb').forEach(cv=>renderSlideCanvas(cv,parseInt(cv.dataset.index,10)))}
+    function createSlideCard(index){
+      const wrap=document.createElement('div'); wrap.className='slideCard';
+      const c=document.createElement('canvas'); c.width=W; c.height=H; c.className='thumb'; c.dataset.index=index; wrap.appendChild(c);
+      const actions=document.createElement('div'); actions.className='cardActions';
+      const replaceBtn=document.createElement('button'); replaceBtn.className='btn secondary'; replaceBtn.textContent='Replace image';
+      replaceBtn.addEventListener('click',()=>replacePhoto(index)); actions.appendChild(replaceBtn);
+      const dlBtn=document.createElement('button'); dlBtn.className='btn secondary iconBtn'; dlBtn.title='Download JPG';
+      dlBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a1 1 0 011 1v9.586l2.293-2.293a1 1 0 111.414 1.414l-4.001 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L11 13.586V4a1 1 0 011-1z"/><path d="M5 20a2 2 0 002 2h10a2 2 0 002-2v-3a1 1 0 10-2 0v3H7v-3a1 1 0 10-2 0v3z"/></svg>`;
+      dlBtn.addEventListener('click',()=>downloadSlide(index)); actions.appendChild(dlBtn);
+      wrap.appendChild(actions);
+      renderSlideCanvas(c,index);
+      return wrap;
+    }
+
+    function renderAll(){ document.querySelectorAll('canvas.thumb').forEach(cv=>renderSlideCanvas(cv,parseInt(cv.dataset.index,10))); }
 
     function renderSlideCanvas(cv,index){
-      const s=state.slides[index];const ctx=cv.getContext('2d');
+      const s=state.slides[index]; const ctx=cv.getContext('2d');
 
-      // фон + необязательное скругление превью
-      const clipped = clipRoundRect(ctx, 0, 0, W, H, state.settings.cornerRadius);
-      ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+      const clipped=clipRoundRect(ctx,0,0,W,H,state.settings.cornerRadius);
+      ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
 
-      // фото (cover)
       if(s.imgSrc){
         if(!s._img){
           s._img=new Image();
@@ -229,19 +264,18 @@
         }
         const img=s._img;
         const scale=Math.max(W/img.width,H/img.height);
-        const dw=img.width*scale,dh=img.height*scale;
-        const dx=(W-dw)/2,dy=(H-dh)/2;
+        const dw=img.width*scale, dh=img.height*scale;
+        const dx=(W-dw)/2, dy=(H-dh)/2;
         ctx.drawImage(img,dx,dy,dw,dh);
       }
 
-      // ▼ тень под текстом (снизу → вверх)
-      drawBottomFade(ctx, H, state.settings.overlayHeightPct, state.settings.overlayAlpha);
+      // shadow under text
+      drawBottomFade(ctx);
+      if(clipped) ctx.restore();
 
-      if(clipped) ctx.restore(); // снять clip
-
-      // текст (c bold/italic)
-      const fs=state.settings.fontSize,lh=fs*state.settings.lineHeight,fam=state.settings.fontFamily;
-      const pad=state.settings.padding,maxW=W-pad*2;
+      // text with bold/italic runs
+      const fs=state.settings.fontSize, lh=fs*state.settings.lineHeight, fam=state.settings.fontFamily;
+      const pad=state.settings.padding, maxW=W-pad*2;
       const lines=layoutLines(ctx,parseInline(s.text||''),maxW,fs,fam);
       const bottom=H-state.settings.textBottomOffset;
 
@@ -260,7 +294,7 @@
             ctx.shadowBlur=12; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;
             ctx.fillText(run.text,x,y);
             ctx.restore();
-          }else{
+          } else {
             ctx.fillText(run.text,x,y);
           }
           x+=run.w;
@@ -268,17 +302,29 @@
       });
     }
 
+    // image replace & download
     function replacePhoto(index){
-      elFile.onchange=async(e)=>{const f=e.target.files&&e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{state.slides[index].imgSrc=fr.result;state.slides[index]._img=null;renderAll();elFile.value=''};fr.readAsDataURL(f)};elFile.click()
+      elFile.onchange=async(e)=>{
+        const f=e.target.files&&e.target.files[0]; if(!f) return;
+        const fr=new FileReader();
+        fr.onload=()=>{ state.slides[index].imgSrc=fr.result; state.slides[index]._img=null; renderAll(); elFile.value=''; };
+        fr.readAsDataURL(f);
+      };
+      elFile.click();
+    }
+    function downloadSlide(index){
+      const cv=document.querySelectorAll('canvas.thumb')[index];
+      renderSlideCanvas(cv,index);
+      const a=document.createElement('a');
+      a.href=cv.toDataURL('image/jpeg',0.92);
+      a.download=`slide-${index+1}.jpg`;
+      document.body.appendChild(a); a.click(); a.remove();
     }
 
-    function downloadSlide(index){const cv=document.querySelectorAll('canvas.thumb')[index];renderSlideCanvas(cv,index);const a=document.createElement('a');a.href=cv.toDataURL('image/jpeg',0.92);a.download=`slide-${index+1}.jpg`;document.body.appendChild(a);a.click();a.remove()}
-
-    // CLEAR — полная очистка
+    // clear all
     document.getElementById('clearBtn').addEventListener('click',()=>{
-      if(!confirm('Действительно очистить все данные?')) return;
-      state.slides=[];
-      elStory.value='';
+      if(!confirm('Really clear all data?')) return;
+      state.slides=[]; elStory.value='';
       state.settings={
         fontFamily:'Arial, sans-serif',
         fontSize:40,
@@ -293,11 +339,11 @@
         cornerRadius:0
       };
       ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','textShadow','textBottomOffset','overlayHeightPct','overlayAlpha','cornerRadius']
-        .forEach(id=>{const el=document.getElementById(id);if(el)el.value=state.settings[id];});
+        .forEach(id=>{const el=document.getElementById(id); if(el) el.value=state.settings[id];});
       renderSlidesList();
     });
 
-    // Автоприменение всех настроек
+    // auto-apply all controls
     ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','textShadow','textBottomOffset','overlayHeightPct','overlayAlpha','cornerRadius']
       .forEach(id=>{
         const el=document.getElementById(id); if(!el) return;
@@ -308,6 +354,7 @@
         });
       });
 
+    // initial render
     renderSlidesList();
   </script>
 </body>
