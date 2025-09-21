@@ -26,7 +26,13 @@
     summary{cursor:pointer;color:var(--ink);font-weight:600}
     .slides{display:flex;flex-direction:column;gap:14px;margin-top:12px}
     .slideCard{position:relative;background:#0b0e15;border:1px solid var(--line);border-radius:14px;padding:10px}
-    canvas.thumb{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#000;touch-action:none}
+    canvas.thumb{
+      width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#000;
+      touch-action: pan-y; /* даёт скроллить страницу даже по фото */
+    }
+    .cardActions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+    .iconBtn{display:inline-flex;align-items:center;gap:8px}
+    .iconBtn svg{width:18px;height:18px}
     footer{display:flex;justify-content:center;padding:24px}
     .clear{opacity:.8}
     .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;background:#101522;border:1px solid var(--line);font-size:12px;color:var(--muted)}
@@ -81,21 +87,21 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
           <div><label>Base font size (px)</label><input id="fontSize" type="number" min="12" max="120" step="1" value="45" /></div>
           <div><label>Line height</label><input id="lineHeight" type="number" min="1" max="2.4" step="0.01" value="1.25" /></div>
           <div><label>Text padding (px)</label><input id="padding" type="number" min="0" max="160" step="1" value="64" /></div>
+
           <div><label>Fade height (% of canvas)</label><input id="overlayHeightPct" type="number" min="10" max="90" value="20" /></div>
           <div><label>Backdrop opacity (0–1, bottom)</label><input id="overlayAlpha" type="number" min="0" max="1" step="0.05" value="0.6" /></div>
+          <div><label>Gradient hardness (0.5–3)</label><input id="overlayHardness" type="number" min="0.5" max="3" step="0.05" value="1" /></div>
+
           <div><label>Corner radius (px)</label><input id="cornerRadius" type="number" min="0" max="120" step="1" value="0" /></div>
           <div><label>Text color</label><input id="textColor" type="text" value="#ffffff" /></div>
           <div><label>Shadow (0–1)</label><input id="textShadow" type="number" min="0" max="1" step="0.01" value="0.8" /></div>
-          <div><label>Bottom offset (px)</label><input id="bottomOffset" type="number" min="0" max="200" value="0" /></div>
 
-          <div style="grid-column:1 / span 2">
-            <label>Background color (under photos)</label>
-            <input id="bgColor" type="color" value="#000000" />
-          </div>
+          <div><label>Text bottom offset (px)</label><input id="textBottomOffset" type="number" min="0" max="300" step="1" value="48" /></div>
+          <div><label>Background color (under photos)</label><input id="bgColor" type="color" value="#000000" /></div>
         </div>
       </details>
 
-      <div class="hint" style="margin:12px 0 8px">Long press a slide to download JPG • Use “Replace photo” below each slide</div>
+      <div class="hint" style="margin:12px 0 8px">Use “Replace photo” to add an image • Tap the download icon to save JPG</div>
       <div id="slides" class="slides"></div>
     </div>
   </main>
@@ -117,13 +123,14 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         padding: 64,
         lineHeight: 1.25,
         textColor: '#ffffff',
-        overlayAlpha: 0.6,     // gradient bottom opacity
-        overlayHeightPct: 20,  // gradient height (as % of canvas)
-        bottomOffset: 0,
+        overlayAlpha: 0.6,        // bottom opacity
+        overlayHeightPct: 20,     // gradient height (%)
+        overlayHardness: 1,       // curve steepness
         cornerRadius: 0,
         textShadow: 0.8,
         showArrow: false,
-        bgColor: '#000000'
+        bgColor: '#000000',
+        textBottomOffset: 48      // distance from bottom to bottom edge of text block
       },
       autosaveTS: 0
     };
@@ -138,10 +145,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       if(!el) return;
       if(el.type==='checkbox'){ el.checked = !!state.settings[key]; }
       else { el.value = rev(state.settings[key]); }
-      const update = () => {
-        state.settings[key] = transform(el.type==='checkbox' ? el.checked : el.value);
-        renderAll(); queueAutosave();
-      };
+      const update = () => { state.settings[key] = transform(el.type==='checkbox' ? el.checked : el.value); renderAll(); queueAutosave(); };
       el.addEventListener('input', update);
     };
     bindSetting('fontFamily','fontFamily');
@@ -151,10 +155,11 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     bindSetting('padding','padding', v=>parseInt(v,10));
     bindSetting('overlayHeightPct','overlayHeightPct', v=>parseInt(v,10));
     bindSetting('overlayAlpha','overlayAlpha', v=>parseFloat(v));
+    bindSetting('overlayHardness','overlayHardness', v=>parseFloat(v));
     bindSetting('cornerRadius','cornerRadius', v=>parseInt(v,10));
     bindSetting('textColor','textColor');
     bindSetting('textShadow','textShadow', v=>parseFloat(v));
-    bindSetting('bottomOffset','bottomOffset', v=>parseInt(v,10));
+    bindSetting('textBottomOffset','textBottomOffset', v=>parseInt(v,10));
     bindSetting('showArrow','showArrow', v=>v==='on' ? true : document.getElementById('showArrow').checked);
     bindSetting('bgColor','bgColor');
 
@@ -162,10 +167,7 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     function splitTextToSlides(t){
       const parts = t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
       const old = state.slides;
-      state.slides = parts.map((p,i)=>({
-        text: p,
-        imgSrc: (old[i] && old[i].imgSrc) || undefined
-      }));
+      state.slides = parts.map((p,i)=>({ text: p, imgSrc: (old[i] && old[i].imgSrc) || undefined }));
       renderSlidesList(); renderAll();
     }
     elStory.addEventListener('input', ()=>{ splitTextToSlides(elStory.value); queueAutosave(); });
@@ -173,20 +175,26 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     // build UI
     function createSlideCard(index){
       const wrap = document.createElement('div'); wrap.className = 'slideCard';
+
       const c = document.createElement('canvas'); c.width = W; c.height = H; c.className='thumb'; c.dataset.index = index;
-      // long-press to download (no dragging)
-      let timer=null;
-      c.addEventListener('touchstart', (e)=>{ e.preventDefault(); timer=setTimeout(()=>downloadSlide(index),650); }, {passive:false});
-      c.addEventListener('touchend',   (e)=>{ e.preventDefault(); clearTimeout(timer); }, {passive:false});
-      c.addEventListener('mousedown',  ()=>{ timer=setTimeout(()=>downloadSlide(index),650); });
-      c.addEventListener('mouseup',    ()=>{ clearTimeout(timer); });
       wrap.appendChild(c);
 
+      const actions = document.createElement('div'); actions.className='cardActions';
       const replaceBtn = document.createElement('button'); replaceBtn.className='btn secondary'; replaceBtn.textContent='Replace photo';
-      replaceBtn.addEventListener('click',(e)=>{ e.stopPropagation(); replacePhoto(index); }); wrap.appendChild(replaceBtn);
+      replaceBtn.addEventListener('click',(e)=>{ e.stopPropagation(); replacePhoto(index); });
+      actions.appendChild(replaceBtn);
 
-      renderSlideCanvas(c, index); return wrap;
+      const dlBtn = document.createElement('button'); dlBtn.className='btn secondary iconBtn'; dlBtn.title='Download JPG';
+      dlBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3a1 1 0 011 1v9.586l2.293-2.293a1 1 0 111.414 1.414l-4.001 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L11 13.586V4a1 1 0 011-1z"/><path d="M5 20a2 2 0 002 2h10a2 2 0 002-2v-3a1 1 0 10-2 0v3H7v-3a1 1 0 10-2 0v3z"/></svg>`;
+      dlBtn.addEventListener('click', async ()=>{ await downloadSlide(index); });
+      actions.appendChild(dlBtn);
+
+      wrap.appendChild(actions);
+
+      renderSlideCanvas(c, index);
+      return wrap;
     }
+
     function renderSlidesList(){
       elSlides.innerHTML = '';
       state.slides.forEach((_,i)=>elSlides.appendChild(createSlideCard(i)));
@@ -212,58 +220,19 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     }
     function endClip(ctx, clipped){ if(clipped){ ctx.restore(); } }
 
-    function drawGradientBackdrop(ctx, x, y, w, h, alphaBottom){
-      const g = ctx.createLinearGradient(0, y+h, 0, y);
-      g.addColorStop(0, `rgba(0,0,0,${alphaBottom})`);
-      g.addColorStop(1, `rgba(0,0,0,0)`);
-      ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
-    }
-
-    // main renderer (what-you-see-is-what-you-download)
-    function renderSlideCanvas(cv, index){
-      const s = state.slides[index];
-      const ctx = cv.getContext('2d');
-
-      // background (under photo)
-      ctx.fillStyle = state.settings.bgColor || '#000';
-      ctx.fillRect(0,0,W,H);
-
-      const clipped = roundedClip(ctx,0,0,W,H,state.settings.cornerRadius);
-
-      // image: cover fit, centered (no offset/drag)
-      if(s.imgSrc){
-        const img = new Image();
-        img.onload = ()=>{
-          const rImg = img.width / img.height, rCan = W / H;
-          let dw=W, dh=H;
-          if(rImg > rCan){ dh = W / rImg; dw = W; } else { dw = H * rImg; dh = H; }
-          const cx = (W - dw)/2;
-          const cy = (H - dh)/2;
-          ctx.drawImage(img, cx, cy, dw, dh);
-          drawOverlayAndText(ctx, s.text, index);
-          endClip(ctx, clipped);
-        };
-        img.src = s.imgSrc;
-      } else {
-        drawOverlayAndText(ctx, s.text, index);
-        endClip(ctx, clipped);
+    // gradient from bottom (opaque*alpha) → transparent top, with hardness exponent
+    function drawGradientBackdrop(ctx, x, y, w, h, alphaBottom, hardness){
+      const steps = 10; // approximate exponential gradient
+      const grd = ctx.createLinearGradient(0, y+h, 0, y);
+      for(let i=0;i<=steps;i++){
+        const t = i/steps;
+        const a = alphaBottom * Math.pow(1 - t, hardness); // denser near bottom as hardness grows
+        grd.addColorStop(1 - t, `rgba(0,0,0,${Math.max(0, Math.min(1, a))})`);
       }
+      ctx.fillStyle = grd; ctx.fillRect(x, y, w, h);
     }
 
-    function drawOverlayAndText(ctx, text, index){
-      // shadow (over photo/bg, under text)
-      const overlayH = Math.round(H * (state.settings.overlayHeightPct/100));
-      const baseY = H - overlayH - state.settings.bottomOffset;
-      drawGradientBackdrop(ctx, 0, baseY, W, overlayH, state.settings.overlayAlpha);
-
-      // text
-      const fs = state.settings.fontSize;
-      const lh = Math.max(1, state.settings.lineHeight) * fs;
-      ctx.font = `${fs}px ${state.settings.fontFamily}`;
-      ctx.textAlign = state.settings.textAlign;
-      const pad = state.settings.padding;
-      const maxW = W - pad*2;
-
+    function wrapLines(ctx, text, maxW){
       const words = (text||'').split(/\s+/);
       const lines = []; let line = '';
       for(const w of words){
@@ -272,19 +241,56 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         else { line = test; }
       }
       if(line) lines.push(line);
+      return lines;
+    }
 
+    // single place rendering (what you see = what you download)
+    function drawFrame(ctx, slide, index){
+      // background
+      ctx.fillStyle = state.settings.bgColor || '#000';
+      ctx.fillRect(0,0,W,H);
+
+      const clipped = roundedClip(ctx,0,0,W,H,state.settings.cornerRadius);
+
+      // photo (cover)
+      if(slide.imgSrc && slide._img && slide._img.complete){
+        const img = slide._img;
+        const rImg = img.width / img.height, rCan = W / H;
+        let dw=W, dh=H;
+        if(rImg > rCan){ dh = W / rImg; dw = W; } else { dw = H * rImg; dh = H; }
+        const cx = (W - dw)/2, cy = (H - dh)/2;
+        ctx.drawImage(img, cx, cy, dw, dh);
+      }
+
+      // compute text metrics (independent of overlay height)
+      const fs = state.settings.fontSize;
+      const lh = Math.max(1, state.settings.lineHeight) * fs;
+      ctx.font = `${fs}px ${state.settings.fontFamily}`;
+      ctx.textAlign = state.settings.textAlign;
+      const pad = state.settings.padding;
+      const maxW = W - pad*2;
+      const lines = wrapLines(ctx, slide.text, maxW);
+      const textBlockHeight = Math.min(lines.length * lh, H); // rough
+      const bottomEdge = H - state.settings.textBottomOffset;
+      const firstBaseline = bottomEdge - (textBlockHeight - fs) - pad;
+
+      // overlay: under text, independent height
+      const overlayH = Math.round(H * (state.settings.overlayHeightPct/100));
+      const overlayTop = H - overlayH;
+      drawGradientBackdrop(ctx, 0, overlayTop, W, overlayH, state.settings.overlayAlpha, state.settings.overlayHardness);
+
+      // text
       const x = (state.settings.textAlign==='left') ? pad : (state.settings.textAlign==='center' ? W/2 : W - pad);
-      let y = baseY + pad + fs;
+      let y = firstBaseline;
       ctx.fillStyle = state.settings.textColor;
-
       if(state.settings.textShadow>0){
         ctx.save();
         ctx.shadowColor = `rgba(0,0,0,${state.settings.textShadow})`;
         ctx.shadowBlur = 12; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-        for(const ln of lines){ ctx.fillText(ln, x, y); y += lh; if(y > baseY + overlayH - pad) break; }
+        for(const ln of lines){ ctx.fillText(ln, x, y); y += lh; if(y > H - pad) break; }
         ctx.restore();
       } else {
-        for(const ln of lines){ ctx.fillText(ln, x, y); y += lh; if(y > baseY + overlayH - pad) break; }
+        for(const ln of lines){ ctx.fillText(ln, x, y); y += lh; if(y > H - pad) break; }
       }
 
       // optional arrow
@@ -295,6 +301,42 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         ctx.lineTo(ax + size/2, ay); ctx.lineTo(ax - size/2, ay + size/2);
         ctx.closePath(); ctx.fill(); ctx.restore();
       }
+
+      endClip(ctx, clipped);
+    }
+
+    // render onto on-screen canvas
+    function renderSlideCanvas(cv, index){
+      const s = state.slides[index];
+      const ctx = cv.getContext('2d');
+      // ensure image object cached
+      if(s.imgSrc && !s._img){
+        s._img = new Image();
+        s._img.onload = ()=>{ drawFrame(ctx, s, index); };
+        s._img.src = s.imgSrc;
+      }
+      drawFrame(ctx, s, index);
+    }
+
+    // render to an offscreen canvas AND wait for image if needed
+    function renderToCanvas(index, canvas){
+      return new Promise((resolve)=>{
+        const s = state.slides[index];
+        const ctx = canvas.getContext('2d');
+
+        const doDraw = ()=>{ drawFrame(ctx, s, index); resolve(); };
+
+        if(s.imgSrc){
+          if(s._img && s._img.complete){ doDraw(); }
+          else {
+            const img = new Image();
+            img.onload = ()=>{ s._img = img; doDraw(); };
+            img.src = s.imgSrc;
+          }
+        } else {
+          doDraw();
+        }
+      });
     }
 
     // replace photo
@@ -304,26 +346,27 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
         if(!file) return;
         const dataURL = await fileToDataURL(file);
         state.slides[index].imgSrc = dataURL;
+        state.slides[index]._img = null;
         renderAll(); queueAutosave(); elFile.value='';
       };
       elFile.click();
     }
     function fileToDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); }); }
 
-    // download = render offscreen and save
-    function downloadSlide(index){
+    // download (await render to avoid black images)
+    async function downloadSlide(index){
       const off = document.createElement('canvas'); off.width=W; off.height=H;
-      renderSlideCanvas(off, index);
+      await renderToCanvas(index, off);
       const a = document.createElement('a'); a.href = off.toDataURL('image/jpeg', 0.92); a.download = `slide-${index+1}.jpg`;
       document.body.appendChild(a); a.click(); a.remove();
     }
 
     // autosave
-    const SAVE_KEY='icc_session_v8';
+    const SAVE_KEY='icc_session_v9';
     function queueAutosave(){ state.autosaveTS=Date.now(); }
     setInterval(()=>{ if(!state.autosaveTS) return;
       if(Date.now()-state.autosaveTS>=2900){ try{
-        const payload={slides:state.slides,settings:state.settings,story:elStory.value};
+        const payload={slides:state.slides.map(s=>({text:s.text,imgSrc:s.imgSrc})),settings:state.settings,story:elStory.value};
         sessionStorage.setItem(SAVE_KEY, JSON.stringify(payload)); state.autosaveTS=0;
       }catch(e){} } },1000);
 
@@ -331,9 +374,9 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       try{
         const raw=sessionStorage.getItem(SAVE_KEY); if(!raw) return; const data=JSON.parse(raw);
         Object.assign(state.settings, data.settings||{});
-        ['fontFamily','textAlign','fontSize','lineHeight','padding','overlayHeightPct','overlayAlpha','cornerRadius','textColor','textShadow','bottomOffset','showArrow','bgColor']
+        ['fontFamily','textAlign','fontSize','lineHeight','padding','overlayHeightPct','overlayAlpha','overlayHardness','cornerRadius','textColor','textShadow','textBottomOffset','showArrow','bgColor']
           .forEach(id=>{ const el=document.getElementById(id); if(!el) return; if(el.type==='checkbox'){ el.checked=!!state.settings[id]; } else { el.value=state.settings[id]; } });
-        state.slides=(data.slides||[]).map(s=>({text:s.text||'', imgSrc:s.imgSrc}));
+        state.slides=(data.slides||[]).map(s=>({text:s.text||'', imgSrc:s.imgSrc||null, _img:null}));
         elStory.value=data.story||'';
       }catch(e){}
     }
@@ -344,9 +387,11 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
       Object.assign(state.settings, {
         fontFamily: "'Montserrat', Arial, sans-serif",
         fontSize: 45, textAlign:'left', padding:64, lineHeight:1.25, textColor:'#ffffff',
-        overlayAlpha:0.6, overlayHeightPct:20, bottomOffset:0, cornerRadius:0, textShadow:0.8, showArrow:false, bgColor:'#000000'
+        overlayAlpha:0.6, overlayHeightPct:20, overlayHardness:1,
+        cornerRadius:0, textShadow:0.8, textBottomOffset:48,
+        showArrow:false, bgColor:'#000000'
       });
-      ['fontFamily','textAlign','fontSize','lineHeight','padding','overlayHeightPct','overlayAlpha','cornerRadius','textColor','textShadow','bottomOffset','showArrow','bgColor']
+      ['fontFamily','textAlign','fontSize','lineHeight','padding','overlayHeightPct','overlayAlpha','overlayHardness','cornerRadius','textColor','textShadow','textBottomOffset','showArrow','bgColor']
         .forEach(id=>{ const el=document.getElementById(id); if(!el) return; if(el.type==='checkbox'){ el.checked=!!state.settings[id]; } else { el.value=state.settings[id]; } });
       sessionStorage.removeItem(SAVE_KEY); renderSlidesList(); renderAll();
     });
@@ -355,4 +400,4 @@ Each paragraph separated by an empty line becomes a new slide."></textarea>
     restore(); renderSlidesList(); renderAll(); if(elStory.value) splitTextToSlides(elStory.value);
   </script>
 </body>
-                                                         </html>
+  </html>
