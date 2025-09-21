@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="ru">
+<!DOCTYPE html>
+<html lang="ru">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
@@ -9,10 +10,11 @@
     body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,var(--bg),rgba(15,17,21,.6));backdrop-filter: blur(6px)}
     .wrap{max-width:960px;margin:0 auto;padding:12px}
-    .col{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .col{flex:1 1 320px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
     label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
     textarea{width:100%;min-height:120px;resize:vertical;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;line-height:1.5}
-    select,input[type="number"],input[type="text"],input[type="color"]{width:100%;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px}
+    select,input[type="number"],input[type="text"]{width:100%;background:#0a0c12;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px}
     .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .btn{appearance:none;border:1px solid var(--line);background:var(--btn);color:var(--ink);padding:10px 12px;border-radius:12px;font-weight:600}
     .btn.secondary{background:#0a0c12}
@@ -20,12 +22,10 @@
     .hint{color:var(--muted);font-size:12px}
     details{background:#0a0c12;border:1px solid var(--line);border-radius:12px;padding:10px}
     summary{cursor:pointer;color:var(--ink);font-weight:600}
-    .slides{display:flex;flex-direction:column;gap:14px;margin-top:12px}
-    .slideCard{position:relative;background:#0b0e15;border:1px solid var(--line);border-radius:14px;padding:10px}
-    canvas.thumb{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#000;touch-action: pan-y}
-    .cardActions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
-    .iconBtn{display:inline-flex;align-items:center;gap:8px}
-    .iconBtn svg{width:18px;height:18px}
+    .slides{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}
+    .slideCard{min-width:180px;background:#0b0e15;border:1px solid var(--line);border-radius:14px;padding:8px}
+    .slideHead{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+    canvas.thumb{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#000}
     footer{display:flex;justify-content:center;padding:24px}
     .clear{opacity:.8}
     .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;background:#101522;border:1px solid var(--line);font-size:12px;color:var(--muted)}
@@ -36,146 +36,245 @@
   <header>
     <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:10px;flex:1 1 auto">
-        <div class="badge">📸 Instagram Carousel Creator <span class="accent">1080×1350</span></div>
+        <div class="badge">📸 Instagram Carousel Creator <span class="accent">1080×1320</span></div>
+      </div>
+      <button id="addSlideBtn" class="btn">+ Слайд</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="row">
+      <div class="col" style="flex:1 1 380px">
+        <label for="story">История (разделяйте слайды пустой строкой)</label>
+        <textarea id="story" placeholder="Вставьте текст истории.
+
+Каждый абзац, отделённый пустой строкой, станет отдельным слайдом."></textarea>
+
+        <details style="margin-top:12px">
+          <summary>Доп. настройки текста и тени</summary>
+          <div class="controls" style="margin-top:10px">
+            <div>
+              <label>Шрифт</label>
+              <select id="fontFamily">
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
+                <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="'Courier New', Courier, monospace">Courier New</option>
+              </select>
+            </div>
+            <div>
+              <label>Размер шрифта (px)</label>
+              <input id="fontSize" type="number" min="12" max="96" step="1" value="40" />
+            </div>
+            <div>
+              <label>Положение текста</label>
+              <select id="textPosition">
+                <option value="bottom">Снизу</option>
+                <option value="center">По центру</option>
+                <option value="top">Сверху</option>
+              </select>
+            </div>
+            <div>
+              <label>Выравнивание</label>
+              <select id="textAlign">
+                <option value="left">Слева</option>
+                <option value="center">По центру</option>
+                <option value="right">Справа</option>
+              </select>
+            </div>
+            <div>
+              <label>Отступы текста (px)</label>
+              <input id="padding" type="number" min="0" max="160" value="64" />
+            </div>
+            <div>
+              <label>Межстрочный интервал</label>
+              <input id="lineHeight" type="number" min="1" max="2.4" step="0.05" value="1.25" />
+            </div>
+            <div>
+              <label>Цвет текста</label>
+              <input id="textColor" type="text" value="#ffffff" />
+            </div>
+            <!-- ▼ Настройки мягкой тени снизу -->
+            <div>
+              <label>Fade height (% от холста)</label>
+              <input id="overlayHeightPct" type="number" min="5" max="50" step="1" value="22" />
+            </div>
+            <div>
+              <label>Darkest opacity (0–1)</label>
+              <input id="overlayAlpha" type="number" min="0" max="1" step="0.01" value="0.68" />
+            </div>
+            <div>
+              <label>Gradient curve (0.5–3)</label>
+              <input id="overlayCurve" type="number" min="0.5" max="3" step="0.05" value="1.3" />
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="col" style="flex:1 1 420px">
+        <div class="slideHead"><span>Слайды</span></div>
+        <div id="slides" class="slides"></div>
       </div>
     </div>
-  </header>  <main class="wrap">
-    <div class="col">
-      <label for="story">История (каждый слайд — отдельный абзац, разделённый пустой строкой)</label>
-      <textarea id="story" placeholder="Вставьте текст истории.\n\nКаждый абзац станет отдельным слайдом. Используйте **жирный** и *курсив* при необходимости."></textarea><details style="margin-top:12px">
-    <summary>Доп. настройки текста</summary>
-    <div class="controls" style="margin-top:10px">
-      <div>
-        <label>Шрифт</label>
-        <select id="fontFamily">
-          <option value="Arial, sans-serif">Arial</option>
-          <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
-          <option value="Roboto, Arial, sans-serif">Roboto</option>
-          <option value="'Open Sans', Arial, sans-serif">Open Sans</option>
-          <option value="'PT Sans', Arial, sans-serif">PT Sans</option>
-          <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
-        </select>
-      </div>
-      <div>
-        <label>Размер шрифта (px)</label>
-        <input id="fontSize" type="number" min="16" max="96" step="1" value="40" />
-      </div>
-      <div>
-        <label>Выравнивание</label>
-        <select id="textAlign">
-          <option value="left">Слева</option>
-          <option value="center">По центру</option>
-          <option value="right">Справа</option>
-        </select>
-      </div>
-      <div>
-        <label>Отступы текста (px)</label>
-        <input id="padding" type="number" min="0" max="160" value="64" />
-      </div>
-      <div>
-        <label>Межстрочный интервал</label>
-        <input id="lineHeight" type="number" min="1" max="2.4" step="0.05" value="1.25" />
-      </div>
-      <div>
-        <label>Отступ от низа (px)</label>
-        <input id="textBottomOffset" type="number" min="0" max="400" value="130" />
-      </div>
-      <div>
-        <label>Цвет текста</label>
-        <input id="textColor" type="text" value="#ffffff" />
-      </div>
-      <div>
-        <label>Тень текста (0–1)</label>
-        <input id="textShadow" type="number" min="0" max="1" step="0.05" value="0.8" />
-      </div>
-    </div>
-  </details>
+  </main>
 
-  <div id="slides" class="slides"></div>
-</div>
-
-  </main>  <footer>
+  <footer>
     <button id="clearBtn" class="btn warn clear">Clear Results — сбросить всё (текст, фото, настройки)</button>
-  </footer>  <input id="filePicker" type="file" accept="image/*" style="display:none" />  <script>
-    const W=1080,H=1350; // 4:5
-    const state={
-      slides:[],
-      settings:{
-        fontFamily:'Arial, sans-serif',
-        fontSize:40,
-        textAlign:'left',
-        padding:64,
-        lineHeight:1.25,
-        textColor:'#ffffff',
-        textShadow:0.8,
-        textBottomOffset:130,
+  </footer>
+
+  <input id="filePicker" type="file" accept="image/*" style="display:none" />
+
+  <script>
+    const W = 1080, H = 1320; // 3:4
+    const state = {
+      slides: [],
+      settings: {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: 40,
+        textPosition: 'bottom',
+        textAlign: 'left',
+        padding: 64,
+        lineHeight: 1.25,
+        textColor: '#ffffff',
+        // ▼ мягкая тень снизу
+        overlayHeightPct: 22,   // высота тени (% от холста)
+        overlayAlpha: 0.68,     // насыщенность у нижней кромки
+        overlayCurve: 1.3       // 0.5–3, >1 — сильнее у низа
       }
     };
 
-    const elStory=document.getElementById('story');
-    const elSlides=document.getElementById('slides');
-    const elFile=document.getElementById('filePicker');
+    const elStory = document.getElementById('story');
+    const elSlides = document.getElementById('slides');
+    const elFile = document.getElementById('filePicker');
 
-    // разбивка текста на абзацы → слайды
+    // ——— Текст → слайды
     function splitTextToSlides(t){
-      const parts=t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
-      const old=state.slides;
-      state.slides=parts.map((p,i)=>({text:p,imgSrc:(old[i]&&old[i].imgSrc)||undefined,_img:null}));
-      renderSlidesList();renderAll();
+      const parts = t.replace(/\r/g,'').split(/\n\s*\n/g).map(s=>s.trim()).filter(Boolean);
+      const old = state.slides;
+      state.slides = parts.map((p,i)=>({ text: p, imgSrc: (old[i] && old[i].imgSrc) || undefined }));
     }
-    elStory.addEventListener('input',()=>splitTextToSlides(elStory.value));
+
+    // Автогенерация при наборе
+    elStory.addEventListener('input', ()=>{
+      splitTextToSlides(elStory.value);
+      renderSlidesList(); renderAll();
+    });
+
+    document.getElementById('addSlideBtn').addEventListener('click', ()=>{
+      state.slides.push({text:'Новый слайд', imgSrc: undefined});
+      renderSlidesList(); renderAll();
+    });
+
+    // Полный сброс
+    document.getElementById('clearBtn').addEventListener('click', ()=>{
+      elStory.value=''; state.slides=[];
+      state.settings={...state.settings, fontFamily:'Arial, sans-serif',fontSize:40,textPosition:'bottom',textAlign:'left',padding:64,lineHeight:1.25,textColor:'#ffffff',overlayHeightPct:22,overlayAlpha:0.68,overlayCurve:1.3};
+      renderSlidesList(); renderAll();
+    });
+
+    // Автоприменение всех настроек
+    ['fontFamily','fontSize','textPosition','textAlign','padding','lineHeight','textColor','overlayHeightPct','overlayAlpha','overlayCurve']
+      .forEach(id=>{
+        const el=document.getElementById(id);
+        if(!el) return;
+        el.addEventListener('input', ()=>{
+          const v=(el.type==='number')?parseFloat(el.value):el.value;
+          state.settings[id]=isNaN(v)?el.value:v;
+          renderAll();
+        });
+      });
 
     function createSlideCard(index){
-      const wrap=document.createElement('div');wrap.className='slideCard';
-      const c=document.createElement('canvas');c.width=W;c.height=H;c.className='thumb';c.dataset.index=index;wrap.appendChild(c);
-      const actions=document.createElement('div');actions.className='cardActions';
-      const replaceBtn=document.createElement('button');replaceBtn.className='btn secondary';replaceBtn.textContent='Replace photo';replaceBtn.addEventListener('click',()=>replacePhoto(index));actions.appendChild(replaceBtn);
-      const dlBtn=document.createElement('button');dlBtn.className='btn secondary iconBtn';dlBtn.title='Скачать JPG';dlBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a1 1 0 011 1v9.586l2.293-2.293a1 1 0 111.414 1.414l-4.001 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L11 13.586V4a1 1 0 011-1z"/><path d="M5 20a2 2 0 002 2h10a2 2 0 002-2v-3a1 1 0 10-2 0v3H7v-3a1 1 0 10-2 0v3z"/></svg>`;dlBtn.addEventListener('click',()=>downloadSlide(index));actions.appendChild(dlBtn);
-      wrap.appendChild(actions);
-      renderSlideCanvas(c,index);return wrap;
+      const wrap=document.createElement('div'); wrap.className='slideCard';
+      const head=document.createElement('div'); head.className='slideHead';
+      head.innerHTML=`<span>#${index+1}</span><button class="btn secondary" data-edit-text>Текст</button>`;
+      wrap.appendChild(head);
+
+      const c=document.createElement('canvas'); c.width=W; c.height=H; c.className='thumb'; c.dataset.index=index;
+      wrap.appendChild(c);
+
+      head.querySelector('[data-edit-text]').addEventListener('click', ()=>{
+        const nt=prompt('Изменить текст слайда', state.slides[index].text||'');
+        if(nt!==null){ state.slides[index].text=nt; renderSlideCanvas(c,index); }
+      });
+
+      renderSlideCanvas(c,index);
+      return wrap;
     }
 
     function renderSlidesList(){
       elSlides.innerHTML='';
-      if(state.slides.length===0){const empty=document.createElement('div');empty.className='hint';empty.textContent='Начните с текста — слайды появятся автоматически.';elSlides.appendChild(empty);return}
+      if(!state.slides.length){
+        const empty=document.createElement('div'); empty.className='hint';
+        empty.textContent='Начните с текста — слайды появятся автоматически.'; elSlides.appendChild(empty); return;
+      }
       state.slides.forEach((_,i)=>elSlides.appendChild(createSlideCard(i)));
     }
 
-    function renderAll(){document.querySelectorAll('canvas.thumb').forEach(cv=>renderSlideCanvas(cv,parseInt(cv.dataset.index,10)))}
-
-    // простая разметка **bold**/*italic*
-    function parseInline(text){const tokens=[];let i=0;while(i<text.length){if(text.startsWith('**',i)||text.startsWith('__',i)){const m=text.substr(i,2),e=text.indexOf(m,i+2);if(e!==-1){tokens.push({t:text.slice(i+2,e),b:true,i:false});i=e+2;continue}}if(text[i]==='*'||text[i]==='_'){const m=text[i],e=text.indexOf(m,i+1);if(e!==-1){tokens.push({t:text.slice(i+1,e),b:false,i:true});i=e+1;continue}}let j=i;while(j<text.length&&!(text.startsWith('**',j)||text.startsWith('__',j)||text[j]==='*'||text[j]==='_'))j++;tokens.push({t:text.slice(i,j),b:false,i:false});i=j}return tokens}
-    function setFont(ctx,fs,fam,b,i){ctx.font=`${b?'bold ':''}${i?'italic ':''}${fs}px ${fam}`}
-    function layoutLines(ctx,tokens,maxW,fs,fam){const lines=[];let line=[],w=0;const meas=(txt,b,i)=>{setFont(ctx,fs,fam,b,i);return ctx.measureText(txt).width};for(const tok of tokens){const parts=tok.t.split(/(\s+)/);for(const p of parts){if(!p)continue;const ww=meas(p,tok.b,tok.i);if(w+ww>maxW&&line.length){lines.push({runs:line,width:w});line=[{text:p,b:tok.b,i:tok.i,w:ww}];w=ww}else{line.push({text:p,b:tok.b,i:tok.i,w:ww});w+=ww}}}if(line.length)lines.push({runs:line,width:w});return lines}
+    function renderAll(){ document.querySelectorAll('canvas.thumb').forEach(cv=>renderSlideCanvas(cv,parseInt(cv.dataset.index,10))); }
 
     function renderSlideCanvas(cv,index){
-      const s=state.slides[index];const ctx=cv.getContext('2d');
+      const s=state.slides[index]; const ctx=cv.getContext('2d');
       // фон
-      ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
-      // фото (cover)
-      if(s.imgSrc){if(!s._img){s._img=new Image();s._img.onload=()=>renderSlideCanvas(cv,index);s._img.src=s.imgSrc;return}const img=s._img;const scale=Math.max(W/img.width,H/img.height);const dw=img.width*scale,dh=img.height*scale;const dx=(W-dw)/2,dy=(H-dh)/2;ctx.drawImage(img,dx,dy,dw,dh)}
-      // ТЕКСТ (без подложки)
-      const fs=state.settings.fontSize,lh=fs*state.settings.lineHeight,fam=state.settings.fontFamily;const pad=state.settings.padding,maxW=W-pad*2;const lines=layoutLines(ctx,parseInline(s.text||''),maxW,fs,fam);const bottom=H-state.settings.textBottomOffset;lines.forEach((line,i)=>{const y=bottom-(lines.length-1-i)*lh;let xStart=pad;if(state.settings.textAlign==='center')xStart=(W-line.width)/2;if(state.settings.textAlign==='right')xStart=W-pad-line.width;let x=xStart;for(const run of line.runs){setFont(ctx,fs,fam,!!run.b,!!run.i);ctx.fillStyle=state.settings.textColor;if(state.settings.textShadow>0){ctx.save();ctx.shadowColor=`rgba(0,0,0,${state.settings.textShadow})`;ctx.shadowBlur=12;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;ctx.fillText(run.text,x,y);ctx.restore()}else{ctx.fillText(run.text,x,y)}x+=run.w}})
+      ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+
+      // изображение: cover
+      if(s.imgSrc){
+        const img=new Image();
+        img.onload=()=>{
+          const rImg=img.width/img.height, rCan=W/H;
+          let sx=0, sy=0, sw=img.width, sh=img.height;
+          if(rImg>rCan){ const targetW=img.height*rCan; sx=(img.width-targetW)/2; sw=targetW; }
+          else { const targetH=img.width/rCan; sy=(img.height-targetH)/2; sh=targetH; }
+          ctx.drawImage(img,sx,sy,sw,sh,0,0,W,H);
+          drawOverlayAndText(ctx,s);
+        };
+        img.src=s.imgSrc;
+      } else {
+        ctx.fillStyle='#333'; ctx.fillRect(0,0,W,H);
+        drawOverlayAndText(ctx,s);
+      }
     }
 
-    function replacePhoto(index){
-      elFile.onchange=async(e)=>{const f=e.target.files&&e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{state.slides[index].imgSrc=fr.result;state.slides[index]._img=null;renderAll();elFile.value=''};fr.readAsDataURL(f)};elFile.click()
+    function drawOverlayAndText(ctx,s){
+      // мягкая тень снизу под текстом (только когда позиция «снизу»)
+      if(state.settings.textPosition==='bottom'){
+        const oh=Math.round(H*(state.settings.overlayHeightPct/100));
+        const y0=H, y1=H-oh;                 // низ → верх тени
+        const g=ctx.createLinearGradient(0,y0,0,y1);
+        const steps=24;
+        for(let i=0;i<=steps;i++){           // 0..1 от низа вверх
+          const t=i/steps;
+          const a=state.settings.overlayAlpha*Math.pow(1-t,state.settings.overlayCurve);
+          g.addColorStop(1-t,`rgba(0,0,0,${a})`);
+        }
+        ctx.fillStyle=g; ctx.fillRect(0,y1,W,oh);
+      }
+
+      // текст
+      ctx.save();
+      const fs=state.settings.fontSize, lh=Math.max(1,state.settings.lineHeight)*fs;
+      ctx.font=`${fs}px ${state.settings.fontFamily}`;
+      ctx.textAlign=state.settings.textAlign;
+      ctx.fillStyle=state.settings.textColor;
+
+      const pad=state.settings.padding, maxW=W-pad*2;
+      const words=(s.text||'').split(/\s+/); const lines=[]; let line='';
+      for(const w of words){ const test=line?line+' '+w:w; if(ctx.measureText(test).width>maxW && line){lines.push(line); line=w;} else {line=test;} }
+      if(line) lines.push(line);
+
+      let y;
+      if(state.settings.textPosition==='bottom') y=H-pad;
+      else if(state.settings.textPosition==='top') y=pad+fs;
+      else y=H/2-(lines.length-1)*lh/2;
+
+      const x=state.settings.textAlign==='left'?pad:(state.settings.textAlign==='center'?W/2:W-pad);
+      for(const ln of lines){ ctx.fillText(ln,x,y); y+=lh; }
+      ctx.restore();
     }
 
-    function downloadSlide(index){const cv=document.querySelectorAll('canvas.thumb')[index];renderSlideCanvas(cv,index);const a=document.createElement('a');a.href=cv.toDataURL('image/jpeg',0.92);a.download=`slide-${index+1}.jpg`;document.body.appendChild(a);a.click();a.remove()}
-
-    // CLEAR — полная очистка
-    document.getElementById('clearBtn').addEventListener('click',()=>{
-      if(!confirm('Действительно очистить все данные?')) return;
-      state.slides=[];
-      elStory.value='';
-      // Сброс настроек к умолчаниям
-      state.settings={fontFamily:'Arial, sans-serif',fontSize:40,textAlign:'left',padding:64,lineHeight:1.25,textColor:'#ffffff',textShadow:0.8,textBottomOffset:130};
-      ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','textShadow','textBottomOffset'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=state.settings[id];});
-      renderSlidesList();
-    });
-
-    // init
     renderSlidesList();
-  </script></body>
+  </script>
+</body>
 </html>
