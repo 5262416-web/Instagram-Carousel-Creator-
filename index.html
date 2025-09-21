@@ -161,29 +161,62 @@ Use **bold** and *italic* if needed."></textarea>
     }
     elStory.addEventListener('input',()=>splitTextToSlides(elStory.value));
 
-    // ---------- inline formatting (**bold**, *italic*) ----------
+    // ---------- robust inline formatting (**bold**, *italic*) ----------
     function parseInline(text){
       const tokens=[]; let i=0;
       while(i<text.length){
-        if(text.startsWith('**',i)||text.startsWith('__',i)){
-          const m=text.substr(i,2),e=text.indexOf(m,i+2);
-          if(e!==-1){ tokens.push({t:text.slice(i+2,e),b:true,i:false}); i=e+2; continue; }
+        // **bold** or __bold__
+        if(text.startsWith('**',i) || text.startsWith('__',i)){
+          const m=text.substr(i,2);
+          const e=text.indexOf(m,i+2);
+          if(e!==-1){
+            tokens.push({t:text.slice(i+2,e),b:true,i:false});
+            i=e+2;
+            continue;
+          } else {
+            // no closing → treat the two chars literally
+            tokens.push({t:text.substr(i,2),b:false,i:false});
+            i+=2;
+            continue;
+          }
         }
-        if(text[i]==='*'||text[i]==='_'){
-          const m=text[i],e=text.indexOf(m,i+1);
-          if(e!==-1){ tokens.push({t:text.slice(i+1,e),b:false,i:true}); i=e+1; continue; }
+        // *italic* or _italic_
+        if(text[i]==='*' || text[i]==='_'){
+          const m=text[i];
+          const e=text.indexOf(m,i+1);
+          if(e!==-1){
+            tokens.push({t:text.slice(i+1,e),b:false,i:true});
+            i=e+1;
+            continue;
+          } else {
+            // single marker without closing → literal char
+            tokens.push({t:m,b:false,i:false});
+            i+=1;
+            continue;
+          }
         }
-        let j=i; while(j<text.length && !(text.startsWith('**',j)||text.startsWith('__',j)||text[j]==='*'||text[j]==='_')) j++;
-        tokens.push({t:text.slice(i,j),b:false,i:false}); i=j;
+        // plain run until next marker
+        let j=i;
+        while(
+          j<text.length &&
+          !text.startsWith('**',j) &&
+          !text.startsWith('__',j) &&
+          text[j]!=='*' &&
+          text[j]!=='_'
+        ){ j++; }
+        tokens.push({t:text.slice(i,j),b:false,i:false});
+        i=j;
       }
       return tokens;
     }
+
     function setFont(ctx,fs,fam,b,i){ ctx.font=`${b?'bold ':''}${i?'italic ':''}${fs}px ${fam}`; }
+
     function layoutLines(ctx,tokens,maxW,fs,fam){
       const lines=[]; let line=[],w=0;
       const meas=(txt,b,i)=>{ setFont(ctx,fs,fam,b,i); return ctx.measureText(txt).width; };
       for(const tok of tokens){
-        const parts=tok.t.split(/(\s+)/);
+        const parts=tok.t.split(/(\s+)/); // keep spaces as separate runs
         for(const p of parts){
           if(!p) continue;
           const ww=meas(p,tok.b,tok.i);
@@ -217,7 +250,12 @@ Use **bold** and *italic* if needed."></textarea>
       const oh=Math.max(1, Math.round(H*(state.settings.overlayHeightPct/100)));
       const yBottom=H, yTop=H-oh;
       const g=ctx.createLinearGradient(0,yBottom,0,yTop);
-      const stops=[[0.00,state.settings.overlayAlpha],[0.35,state.settings.overlayAlpha*0.7],[0.70,state.settings.overlayAlpha*0.35],[1.00,0]];
+      const stops=[
+        [0.00,state.settings.overlayAlpha],
+        [0.35,state.settings.overlayAlpha*0.7],
+        [0.70,state.settings.overlayAlpha*0.35],
+        [1.00,0]
+      ];
       stops.forEach(([t,a])=>g.addColorStop(t,`rgba(0,0,0,${a})`));
       ctx.fillStyle=g; ctx.fillRect(0,yTop,W,oh);
     }
@@ -276,7 +314,8 @@ Use **bold** and *italic* if needed."></textarea>
       // text with bold/italic runs
       const fs=state.settings.fontSize, lh=fs*state.settings.lineHeight, fam=state.settings.fontFamily;
       const pad=state.settings.padding, maxW=W-pad*2;
-      const lines=layoutLines(ctx,parseInline(s.text||''),maxW,fs,fam);
+      const tokens=parseInline(s.text||'');
+      const lines=layoutLines(ctx,tokens,maxW,fs,fam);
       const bottom=H-state.settings.textBottomOffset;
 
       lines.forEach((line,i)=>{
@@ -343,14 +382,16 @@ Use **bold** and *italic* if needed."></textarea>
       renderSlidesList();
     });
 
-    // auto-apply all controls
+    // auto-apply all controls (instant preview)
     ['fontFamily','fontSize','textAlign','padding','lineHeight','textColor','textShadow','textBottomOffset','overlayHeightPct','overlayAlpha','cornerRadius']
       .forEach(id=>{
         const el=document.getElementById(id); if(!el) return;
-        el.addEventListener('input', ()=>{
-          const v=(el.type==='number')?parseFloat(el.value):el.value;
-          state.settings[id]=isNaN(v)?el.value:v;
-          renderAll();
+        ['input','change'].forEach(evt=>{
+          el.addEventListener(evt, ()=>{
+            const v=(el.type==='number')?parseFloat(el.value):el.value;
+            state.settings[id]=isNaN(v)?el.value:v;
+            renderAll();
+          });
         });
       });
 
